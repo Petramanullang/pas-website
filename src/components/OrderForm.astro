@@ -11,7 +11,7 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     <ul class="checks">
       <li><Icon name="check" size={18} /><span>Gratis tanya-tanya dulu, tanpa kewajiban order</span></li>
       <li><Icon name="check" size={18} /><span>Harga final disepakati sebelum mulai</span></li>
-      <li><Icon name="check" size={18} /><span>Isi form tidak disimpan di server mana pun</span></li>
+      <li><Icon name="check" size={18} /><span>Dapat struk untuk cek status dan menulis ulasan</span></li>
     </ul>
     <div class="direct">
       <span class="muted">Lebih suka langsung chat?</span>
@@ -29,10 +29,18 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
         <p class="error" id="e-service" hidden>Pilih layanan dulu, ya.</p>
       </div>
 
-      <div class="field">
-        <label for="f-name">Nama <span class="req" aria-hidden="true">*</span></label>
-        <input class="input" id="f-name" name="name" type="text" autocomplete="name" placeholder="Nama kamu" required maxlength="60" />
-        <p class="error" id="e-name" hidden>Nama minimal 2 karakter.</p>
+      <div class="row2">
+        <div class="field">
+          <label for="f-name">Nama <span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="f-name" name="name" type="text" autocomplete="name" placeholder="Nama kamu" required maxlength="60" />
+          <p class="error" id="e-name" hidden>Nama minimal 2 karakter.</p>
+        </div>
+        <div class="field">
+          <label for="f-phone">Nomor WhatsApp <span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="0812 3456 7890" required />
+          <p class="hint" data-phone-hint>Untuk membuka struk pesananmu.</p>
+          <p class="error" id="e-phone" hidden>Tulis nomor WhatsApp yang aktif, misal 0812 3456 7890.</p>
+        </div>
       </div>
 
       <div class="field" data-when="tugas" hidden>
@@ -87,6 +95,7 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
         <Icon name="wa" /> Kirim via WhatsApp
       </button>
       <p class="status" role="status" aria-live="polite" data-status></p>
+      <p class="mine">Sudah pernah pesan? <a href="/pesananku">Lihat struk di Pesananku</a></p>
     </form>
 </div>
 
@@ -120,17 +129,26 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
   .promo-msg :global(.est) { color: var(--ink-2); }
   .promo-msg :global(.est s) { color: var(--muted); }
   .promo-msg :global(.fine) { font-size: 0.82rem; color: var(--muted); }
+  .hint { margin: 0; font-size: 0.82rem; color: var(--muted); }
+  .promo-msg :global(.cond) { font-size: 0.85rem; color: var(--ink-2); }
   .promo-msg :global(button) { justify-self: start; border: 0; background: none; padding: 0; font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 0.85rem; color: var(--ink-2); }
   .submit { min-height: 56px; font-size: 1.02rem; margin-top: 0.25rem; }
   .status { margin: 0; font-size: 0.92rem; color: var(--muted); min-height: 1.4em; }
   .status :global(a) { font-weight: 650; }
+  .status.ok { color: var(--ink); background: #e6f5ec; border-radius: 16px; padding: 0.85rem 1rem; display: grid; gap: 0.35rem; }
+  .status.ok :global(strong) { font-family: var(--font-head); font-size: 1.05rem; }
+  .status.ok :global(.code) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 800; letter-spacing: 0.04em; }
+  .status.bad { color: var(--err); font-weight: 600; }
+  .mine { margin: 0; font-size: 0.88rem; color: var(--muted); text-align: center; }
+  .mine a { font-weight: 650; color: var(--ink); }
   @media (max-width: 900px) { .order { grid-template-columns: 1fr; } }
   @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
 </style>
 
 <script>
   import { SERVICES, waLink } from '../config';
-  import { checkPromo, usePromo, promoLabel, applyPromo, rupiah, type PromoCheck } from '../lib/supabase';
+  import { checkPromo, createOrder, promoLabel, applyPromo, rupiah, daysLabel, timeLabel, type PromoCheck } from '../lib/supabase';
+  import { saveStruk, getOrderRef, resetOrderRef, normPhone } from '../lib/struk';
 
   const form = document.getElementById('order-form') as HTMLFormElement | null;
   if (form) {
@@ -166,15 +184,28 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     const promoInput = $<HTMLInputElement>('#f-promo');
     const promoBtn = $<HTMLButtonElement>('[data-promo-apply]');
     const promoMsg = $<HTMLDivElement>('[data-promo-msg]');
+    const phone = $<HTMLInputElement>('#f-phone');
+    const phoneHint = $<HTMLParagraphElement>('[data-phone-hint]');
+    const phoneOk = (v: string) => /^(\+?62|0)?8[0-9]{7,12}$/.test(v.replace(/[\s.-]/g, ''));
+    const modeVal = () => form.querySelector<HTMLInputElement>('input[name="mode"]:checked')?.value ?? '';
+    const promoMode = () => (service.value === 'kelas' ? modeVal() : '');
+    const syncPhone = () => {
+      const lim = promo?.per_person_limit ?? null;
+      phoneHint.textContent = lim
+        ? `Untuk membuka struk. Promo ini bisa dipakai ${lim === 1 ? 'satu kali' : `${lim} kali`} per nomor.`
+        : 'Untuk membuka struk pesananmu.';
+    };
+    phone.addEventListener('input', () => { if (phoneOk(phone.value)) setErr('phone', false); });
     let promo: Extract<PromoCheck, { status: 'ok' }> | null = null;
     let promoCode = '';
-    let usedLine = ''; // promo yang sudah tercatat (agar kirim ulang tidak memotong kuota lagi)
+    let usedLine = ''; // dipakai ulang bila form dikirim lagi tanpa perubahan
+    let lastSig = '', lastCode = '';
     const fmtD = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const svcTitle = (id: string) => SERVICES.find((s) => s.id === id)?.title ?? id;
     const basePrice = () => {
       const svc = SERVICES.find((s) => s.id === service.value);
       if (!svc || svc.from === null) return null;
-      if (svc.id === 'kelas') return (form.querySelector<HTMLInputElement>('input[name="mode"]:checked')?.value === 'Offline') ? 80000 : 50000;
+      if (svc.id === 'kelas') return modeVal() === 'Offline' ? 80000 : 50000;
       return svc.from;
     };
     const showPromo = (html: string, kind: 'ok' | 'bad') => {
@@ -184,6 +215,7 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     };
     const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
     const renderPromo = () => {
+      syncPhone();
       if (!promo) return;
       const base = basePrice();
       let est = '';
@@ -192,8 +224,11 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
         est = `<span class="est">Perkiraan: <s>mulai ${rupiah(base)}</s> → mulai <b>${rupiah(price)}</b></span>`;
       }
       const until = promo.ends_at ? ` · berlaku s.d. ${fmtD(promo.ends_at)}` : '';
+      const cond = [daysLabel(promo.days), timeLabel(promo.time_start, promo.time_end), promo.class_mode ? `kelas ${promo.class_mode.toLowerCase()}` : '']
+        .filter(Boolean).join(' · ');
       showPromo(
         `<strong>${esc(promo.code)} · ${esc(promoLabel(promo))}</strong>${promo.title ? `<span>${esc(promo.title)}</span>` : ''}${est}` +
+        (cond ? `<span class="cond">Berlaku: ${esc(cond)}</span>` : '') +
         `<span class="fine">Potongan dihitung dari harga final yang disepakati${until}.</span><button type="button" data-promo-remove>Hapus kode</button>`,
         'ok',
       );
@@ -201,25 +236,28 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     };
     function clearPromo() {
       usedLine = '';
-      promo = null; promoCode = ''; promoInput.value = ''; promoMsg.hidden = true; promoInput.focus();
+      promo = null; promoCode = ''; promoInput.value = ''; promoMsg.hidden = true; syncPhone(); promoInput.focus();
     }
     async function applyCode(raw: string, silent = false) {
       const code = raw.toUpperCase().replace(/[^A-Z0-9-]/g, '');
       promoInput.value = code;
       if (code !== promoCode) usedLine = '';
-      if (!code) { promo = null; promoCode = ''; promoMsg.hidden = true; return; }
+      if (!code) { promo = null; promoCode = ''; promoMsg.hidden = true; syncPhone(); return; }
       if (!service.value) { showPromo('Pilih layanan dulu, lalu pakai kode promonya.', 'bad'); return; }
       promoBtn.disabled = true; promoBtn.textContent = 'Cek…';
       try {
-        const r = await checkPromo(code, service.value);
+        const r = await checkPromo(code, service.value, promoMode());
         promoCode = code;
         if (r.status === 'ok') { promo = r; renderPromo(); return; }
-        promo = null;
+        promo = null; usedLine = ''; syncPhone();
         const msg =
           r.status === 'invalid' ? 'Kode promo tidak ditemukan.' :
           r.status === 'not_started' ? `Promo ini belum dimulai${r.starts_at ? ` (mulai ${fmtD(r.starts_at)})` : ''}.` :
           r.status === 'expired' ? 'Promo ini sudah berakhir.' :
           r.status === 'quota' ? (r.personal ? 'Kode personal ini sudah dipakai.' : 'Kuota promo ini sudah habis.') :
+          r.status === 'mode' ? `Promo ini khusus kelas ${r.class_mode?.toLowerCase()}. Ganti mode kelas kalau mau memakainya.` :
+          r.status === 'day' ? `Promo ini hanya berlaku hari ${daysLabel(r.days)}.` :
+          r.status === 'time' ? `Promo ini hanya berlaku jam ${timeLabel(r.time_start, r.time_end)}.` :
           `Promo ini hanya untuk: ${r.services.map(svcTitle).join(', ')}.`;
         showPromo(esc(msg), 'bad');
       } catch {
@@ -230,7 +268,9 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     }
     promoBtn.addEventListener('click', () => applyCode(promoInput.value));
     promoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCode(promoInput.value); } });
-    form.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener('change', renderPromo));
+    form.querySelectorAll('input[name="mode"]').forEach((r) =>
+      r.addEventListener('change', () => (promoCode ? applyCode(promoCode, true) : renderPromo())),
+    );
     const promoFromUrl = new URLSearchParams(location.search).get('promo');
     if (promoFromUrl) { promoInput.value = promoFromUrl; }
 
@@ -247,8 +287,8 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     sync();
     if (promoFromUrl && service.value) applyCode(promoFromUrl, true);
 
-    function setErr(key: 'service' | 'name' | 'detail', on: boolean) {
-      const input = key === 'service' ? service : key === 'name' ? name : detail;
+    function setErr(key: 'service' | 'name' | 'detail' | 'phone', on: boolean) {
+      const input = { service, name, detail, phone }[key];
       const msg = form!.querySelector<HTMLElement>(`#e-${key}`)!;
       msg.hidden = !on;
       input.setAttribute('aria-invalid', String(on));
@@ -260,47 +300,98 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
     const fmtDate = (v: string) =>
       new Date(v + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+    let busy = false;
+    const submitBtn = $<HTMLButtonElement>('button[type="submit"]');
+    const setStatus = (html: string, kind: '' | 'ok' | 'bad' = '') => { status.innerHTML = html; status.className = `status${kind ? ' ' + kind : ''}`; };
+    const promoMsgFor = (st: string) =>
+      st === 'person_limit' ? 'Nomor ini sudah memakai promo ini sampai batasnya. Hapus kode untuk lanjut tanpa promo.' :
+      st === 'quota' ? 'Kuota promo ini baru saja habis. Hapus kode untuk lanjut tanpa promo.' :
+      st === 'expired' ? 'Promo ini sudah berakhir.' :
+      st === 'day' || st === 'time' ? 'Promo ini sedang di luar jadwal berlakunya.' :
+      'Kode promo tidak bisa dipakai. Hapus kode atau coba kode lain.';
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (busy) return;
       const errs = {
         service: !service.value,
         name: name.value.trim().length < 2,
+        phone: !phoneOk(phone.value),
         detail: detail.value.trim().length < 10,
       };
       (Object.keys(errs) as (keyof typeof errs)[]).forEach((k) => setErr(k, errs[k]));
-      const first = (['service', 'name', 'detail'] as const).find((k) => errs[k]);
+      const first = (['service', 'name', 'phone', 'detail'] as const).find((k) => errs[k]);
       if (first) {
-        ({ service, name, detail })[first].focus();
-        status.textContent = 'Ada isian yang belum lengkap.';
+        ({ service, name, phone, detail })[first].focus();
+        setStatus('Ada isian yang belum lengkap.', 'bad');
         return;
       }
       if (promoInput.value.trim() && !promo) {
         promoInput.focus();
-        status.textContent = 'Kode promo belum valid. Tekan "Pakai" atau kosongkan kolomnya.';
+        setStatus('Kode promo belum valid. Tekan "Pakai" atau kosongkan kolomnya.', 'bad');
         return;
       }
 
+      const fd0 = new FormData(form);
+      const extra: Record<string, string> = {};
+      const svcId = service.value;
+      if (svcId === 'tugas' && String(fd0.get('course') || '').trim()) extra.course = String(fd0.get('course')).trim().slice(0, 80);
+      if (svcId === 'kelas') { extra.lang = String(fd0.get('lang') || ''); extra.mode = String(fd0.get('mode') || ''); }
+      if (deadline.value) extra.deadline = deadline.value;
+      if (String(fd0.get('budget') || '').trim()) extra.budget = String(fd0.get('budget')).trim().slice(0, 40);
+      const sig = JSON.stringify([svcId, name.value.trim(), phone.value.replace(/\D/g, ''), detail.value.trim(), extra, promo?.code ?? '']);
+
       // buka tab dulu (masih dalam klik pengguna) supaya tidak diblokir browser
       const win = window.open('', '_blank');
-      let promoLine = usedLine;
-      if (promo && !usedLine) {
-        status.textContent = 'Mencatat kode promo…';
+      let promoLine = '';
+      let code = '';
+      if (sig === lastSig && lastCode) {
+        code = lastCode; promoLine = usedLine; // kirim ulang pesan yang sama: tidak membuat struk baru
+      } else {
+        busy = true; submitBtn.disabled = true;
+        setStatus('Membuat struk pesanan…');
+        const base = basePrice();
+        const est = base !== null ? (promo ? applyPromo(promo, base).price : base) : null;
         try {
-          const r = await usePromo(promo.code, service.value, name.value.trim());
-          if (r.status !== 'ok') {
+          const r = await createOrder({
+            name: name.value.trim(), phone: phone.value, service: svcId, detail: detail.value.trim(), extra,
+            estPrice: est, promo: promo?.code ?? null, clientRef: getOrderRef(),
+          });
+          if (r.status === 'ok') {
+            code = r.code;
+            resetOrderRef();
+            if (promo) promoLine = `• Kode promo: ${promo.code}, ${promoLabel(promo)}${base !== null ? `, perkiraan mulai ${rupiah(est!)}` : ''}`;
+            saveStruk({
+              code, phone: normPhone(phone.value), name: name.value.trim(), service: svcId,
+              detail: detail.value.trim(), extra, estPrice: est, finalPrice: null,
+              promo: promo ? { code: promo.code, discount_type: promo.discount_type, value: promo.value, max_discount: promo.max_discount } : null,
+              status: 'menunggu', reviewed: false, createdAt: r.created_at, checkedAt: Date.now(),
+            });
+            lastSig = sig; lastCode = code; usedLine = promoLine;
+          } else if (r.status === 'promo') {
             win?.close();
-            promo = null;
-            await applyCode(promoInput.value);
-            status.textContent = 'Kode promo tidak bisa dipakai lagi. Hapus kode atau coba kode lain.';
+            if (r.promo_status === 'need_phone') { setErr('phone', true); phone.focus(); }
+            setStatus(esc(promoMsgFor(r.promo_status)), 'bad');
+            if (!['person_limit', 'need_phone'].includes(r.promo_status)) await applyCode(promoInput.value, true);
+            return;
+          } else if (promo) {
+            // promo wajib tercatat, jadi pesanan dengan promo tidak dikirim tanpa struk
+            win?.close();
+            setStatus(r.status === 'rate_limit'
+              ? 'Nomor ini sudah membuat 5 pesanan dalam 1 jam terakhir. Coba lagi nanti atau hubungi lewat chat.'
+              : r.status === 'busy' ? 'Server sedang ramai. Coba lagi beberapa menit lagi.'
+              : esc(r.message), 'bad');
             return;
           }
-          const base = basePrice();
-          const est = base !== null ? `, perkiraan mulai ${rupiah(applyPromo(promo, base).price)}` : '';
-          promoLine = usedLine = `• Kode promo: ${promo.code}, ${promoLabel(promo)}${est}`;
+          // tanpa promo: tetap lanjut ke WhatsApp walau struk gagal dibuat
         } catch {
-          win?.close();
-          status.textContent = 'Gagal mencatat kode promo. Periksa koneksi lalu coba lagi.';
-          return;
+          if (promo) {
+            win?.close();
+            setStatus('Gagal membuat struk. Periksa koneksi lalu coba lagi.', 'bad');
+            return;
+          }
+        } finally {
+          busy = false; submitBtn.disabled = false;
         }
       }
 
@@ -322,14 +413,23 @@ import { SERVICES, LANGUAGES, CONTACT, WA_GENERAL } from '../config';
       const budget = String(fd.get('budget') || '').trim();
       if (budget) lines.push(`• Budget: ${budget}`);
       if (promoLine) lines.push(promoLine);
+      if (code) lines.push(`• Kode struk: ${code}`);
       lines.push('', 'Terima kasih!');
 
       const url = waLink(lines.join('\n'));
       if (win) { win.opener = null; win.location.href = url; }
-      status.innerHTML = win
+      const waLine = win
         ? `WhatsApp sudah dibuka di tab baru. Tidak muncul? <a href="${url}" target="_blank" rel="noopener">Buka di sini</a>.`
         : `Mengalihkan ke WhatsApp… <a href="${url}">Klik di sini</a> jika tidak berpindah.`;
-      if (!win) location.href = url;
+      if (code) {
+        setStatus(
+          `<strong>Struk dibuat: <span class="code">${esc(code)}</span></strong>` +
+          `<span>Simpan kodenya. Status pesanan dan tombol ulasan ada di <a href="/struk?kode=${encodeURIComponent(code)}">struk ini</a>.</span>` +
+          `<span>${waLine}</span>`, 'ok');
+      } else {
+        setStatus(`${waLine} Struk belum bisa dibuat sekarang, pesananmu tetap terkirim lewat WhatsApp.`);
+      }
+      if (!win) setTimeout(() => (location.href = url), code ? 1200 : 0);
     });
   }
 </script>

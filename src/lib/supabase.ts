@@ -14,6 +14,8 @@ export type Review = {
   rating: number;
   comment: string;
   created_at: string;
+  /** 'struk' = ulasan dari struk pesanan (pembeli terverifikasi), 'kode' = kode ulasan dari admin. */
+  source?: 'kode' | 'struk';
 };
 
 export type CodeStatus =
@@ -41,7 +43,7 @@ async function call<T>(path: string, init: RequestInit = {}, timeoutMs = 10000):
 
 export function getReviews(limit = 100) {
   const q = new URLSearchParams({
-    select: 'id,name,service,rating,comment,created_at',
+    select: 'id,name,service,rating,comment,created_at,source',
     is_visible: 'eq.true',
     order: 'created_at.desc',
     limit: String(limit),
@@ -94,8 +96,9 @@ export function getProjects(limit = 200) {
 export type PromoType = 'percent' | 'amount' | 'fixed_price';
 export type PromoRule = { discount_type: PromoType; value: number; max_discount: number | null };
 export type PromoCheck =
-  | ({ status: 'ok' | 'not_started' | 'expired' | 'quota' | 'service'; code: string; title: string | null; services: string[];
-       starts_at: string | null; ends_at: string | null; personal: boolean } & PromoRule)
+  | ({ status: 'ok' | 'not_started' | 'expired' | 'quota' | 'service' | 'mode' | 'day' | 'time'; code: string; title: string | null;
+       services: string[]; starts_at: string | null; ends_at: string | null; personal: boolean; days: number[];
+       time_start: string | null; time_end: string | null; per_person_limit: number | null; class_mode: 'Online' | 'Offline' | null } & PromoRule)
   | { status: 'invalid' };
 
 export const rupiah = (n: number) =>
@@ -119,14 +122,36 @@ export function applyPromo(p: PromoRule, base: number) {
   return { price, cut: base - price };
 }
 
-export function checkPromo(code: string, service: string) {
-  return call<PromoCheck>('rpc/pas_check_promo', { method: 'POST', body: JSON.stringify({ p_code: code, p_service: service || null }) });
+export const DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+/** Ringkas daftar hari: [1..5] -> "Senin sampai Jumat", [6,7] -> "Sabtu & Minggu". */
+export function daysLabel(days: number[] | null | undefined) {
+  const d = [...new Set(days ?? [])].filter((n) => n >= 1 && n <= 7).sort((a, b) => a - b);
+  if (!d.length || d.length === 7) return '';
+  const run = d.every((n, i) => i === 0 || n === d[i - 1] + 1);
+  if (run && d.length >= 3) return `${DAY_NAMES[d[0] - 1]} sampai ${DAY_NAMES[d[d.length - 1] - 1]}`;
+  const names = d.map((n) => DAY_NAMES[n - 1]);
+  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
 }
 
-export function usePromo(code: string, service: string, name: string) {
+export const hhmm = (t: string | null | undefined) => (t ? t.slice(0, 5).replace(':', '.') : '');
+
+/** Jam berlaku, misal "19.00 sampai 22.00 WIB". */
+export function timeLabel(start: string | null | undefined, end: string | null | undefined) {
+  return start && end ? `${hhmm(start)} sampai ${hhmm(end)} WIB` : '';
+}
+
+export function checkPromo(code: string, service: string, mode = '') {
+  return call<PromoCheck>('rpc/pas_check_promo', {
+    method: 'POST',
+    body: JSON.stringify({ p_code: code, p_service: service || null, p_mode: mode || null }),
+  });
+}
+
+export function usePromo(code: string, service: string, name: string, mode = '', phone = '') {
   return call<{ status: string; use_id?: string }>('rpc/pas_use_promo', {
     method: 'POST',
-    body: JSON.stringify({ p_code: code, p_service: service, p_name: name }),
+    body: JSON.stringify({ p_code: code, p_service: service, p_name: name, p_mode: mode || null, p_phone: phone || null }),
   });
 }
 
@@ -138,5 +163,46 @@ export function submitFeedback(input: { category: string; ease: number | null; m
       p_category: input.category, p_ease: input.ease, p_message: input.message,
       p_name: input.name || null, p_contact: input.contact || null, p_page: input.page || null,
     }),
+  });
+}
+
+// ---------- Struk pesanan ----------
+export type OrderStatus = 'menunggu' | 'dikerjakan' | 'selesai' | 'batal';
+export type CreateOrderResult =
+  | { status: 'ok'; code: string; created_at: string; duplicated?: boolean }
+  | { status: 'promo'; promo_status: string }
+  | { status: 'rate_limit' | 'busy' }
+  | { status: 'error'; message: string };
+
+export function createOrder(input: {
+  name: string; phone: string; service: string; detail: string; extra: Record<string, string>;
+  estPrice: number | null; promo: string | null; clientRef: string;
+}) {
+  return call<CreateOrderResult>('rpc/pas_create_order', {
+    method: 'POST',
+    body: JSON.stringify({
+      p_name: input.name, p_phone: input.phone, p_service: input.service, p_detail: input.detail, p_extra: input.extra,
+      p_est_price: input.estPrice, p_promo: input.promo, p_client_ref: input.clientRef,
+    }),
+  });
+}
+
+export type OrderInfo = {
+  status: 'ok'; code: string; name: string; phone: string; service: string; detail: string; extra: Record<string, string>;
+  est_price: number | null; final_price: number | null; order_status: OrderStatus;
+  created_at: string; updated_at: string; finished_at: string | null; reviewed: boolean;
+  promo: ({ code: string } & Partial<PromoRule>) | null;
+};
+
+export function orderStatus(code: string, phone: string) {
+  return call<OrderInfo | { status: 'not_found' }>('rpc/pas_order_status', {
+    method: 'POST', body: JSON.stringify({ p_code: code, p_phone: phone }),
+  });
+}
+
+export function submitOrderReview(input: { code: string; phone: string; name: string; rating: number; comment: string }) {
+  return call<{ status: 'ok' | 'not_found' | 'not_finished' | 'used' } | { status: 'error'; message: string }>('rpc/pas_submit_order_review', {
+    method: 'POST',
+    body: JSON.stringify({ p_code: input.code, p_phone: input.phone, p_name: input.name, p_rating: input.rating, p_comment: input.comment }),
   });
 }

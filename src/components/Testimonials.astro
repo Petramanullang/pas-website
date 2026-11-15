@@ -25,7 +25,7 @@ import Icon from './Icon.astro';
     </ul>
     <div class="filters" role="group" aria-label="Filter layanan" data-filters hidden></div>
     <a class="btn btn--brand btn--block write" href="/ulasan"><Icon name="pen" size={18} /> Tulis ulasan</a>
-    <p class="note">Hanya pelanggan dengan kode ulasan dari pesanan yang bisa menulis ulasan.</p>
+    <p class="note">Hanya pembeli yang bisa menulis ulasan: lewat struk pesanan yang sudah selesai atau kode dari Petra. Setiap ulasan dicek sebelum tampil.</p>
   </section>
 
   <div class="list">
@@ -61,6 +61,10 @@ import Icon from './Icon.astro';
     <footer class="who">
       <span class="av" data-av aria-hidden="true"></span>
       <span class="meta"><strong data-name></strong><time data-date></time></span>
+      <span class="vb" data-verified hidden title="Ulasan ini ditulis dari struk pesanan yang sudah selesai">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6z"/><path d="m9 12 2 2 4-4"/></svg>
+        Pembeli terverifikasi
+      </span>
     </footer>
   </article>
 </template>
@@ -93,6 +97,8 @@ import Icon from './Icon.astro';
   :global(.rv .who) { display: flex; align-items: center; gap: 0.7rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
   :global(.rv .av) { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 750; font-family: var(--font-head); color: var(--ink); flex: none; }
   :global(.rv .meta) { display: grid; line-height: 1.3; }
+  :global(.rv .vb) { margin-left: auto; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; font-weight: 700; color: var(--ok); text-align: right; }
+  :global(.rv .vb[hidden]) { display: none; }
   :global(.rv time) { font-size: 0.82rem; color: var(--muted); }
 
   .sk { break-inside: avoid; margin-bottom: var(--gap); background: var(--panel); border-radius: 26px; padding: 1.5rem; display: grid; gap: 0.6rem; }
@@ -148,6 +154,7 @@ import Icon from './Icon.astro';
       const t = n.querySelector<HTMLTimeElement>('[data-date]')!;
       t.dateTime = r.created_at;
       t.textContent = fmt(r.created_at);
+      n.querySelector<HTMLElement>('[data-verified]')!.hidden = r.source !== 'struk';
       return n;
     };
 

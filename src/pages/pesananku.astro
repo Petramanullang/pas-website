@@ -1,0 +1,107 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import StrukLookup from '../components/StrukLookup.astro';
+---
+
+<Base title="Pesananku" description="Riwayat struk pesanan PAS di perangkat ini." noindex>
+  <PageHead
+    kicker="Pesananku"
+    title="Struk pesananmu."
+    desc="Struk tersimpan di perangkat ini setiap kali kamu memesan lewat website. Dari struk kamu bisa melihat status, harga final, dan menulis ulasan."
+  >
+    <a slot="right" class="btn btn--brand btn--sm" href="/pesan">Pesan baru <Icon name="upright" size={18} /></a>
+  </PageHead>
+
+  <div class="mine">
+    <section class="panel list-card" aria-labelledby="mine-title">
+      <div class="panel-title">
+        <h2 id="mine-title">Di perangkat ini <span class="count" data-count></span></h2>
+      </div>
+      <ul class="list" data-list></ul>
+      <div class="empty" data-empty hidden>
+        <Icon name="receipt" size={30} />
+        <p><b>Belum ada struk di perangkat ini.</b><br />Struk muncul otomatis setelah kamu mengirim form Pesan. Ganti HP atau browser? Cari struknya di samping.</p>
+      </div>
+    </section>
+
+    <section class="panel find" aria-labelledby="find-title">
+      <h2 id="find-title">Cari struk</h2>
+      <p class="muted">Pakai kode struk dari pesan WhatsApp dan nomor WhatsApp yang dipakai saat memesan.</p>
+      <StrukLookup compact />
+    </section>
+  </div>
+</Base>
+
+<style>
+  .mine { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr); gap: var(--gap); align-items: start; margin-top: var(--gap); }
+  .list-card h2, .find h2 { font-size: 1.35rem; margin: 0; }
+  .count { font-size: 0.85rem; font-weight: 700; padding: 0.1rem 0.55rem; border-radius: 99px; background: var(--panel-2); vertical-align: middle; font-family: var(--font-body); }
+  .count:empty { display: none; }
+  .find { display: grid; gap: 0.75rem; }
+  .find p { margin: 0; font-size: 0.92rem; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .list :global(a) {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; padding: 1rem 1.1rem; border-radius: 20px; background: var(--panel-2);
+    text-decoration: none; color: var(--ink); transition: background 0.15s ease;
+  }
+  .list :global(a:hover) { background: #ebe8e1; }
+  .list :global(.l) { display: grid; gap: 0.2rem; min-width: 0; }
+  .list :global(.c) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 800; letter-spacing: 0.02em; overflow-wrap: anywhere; }
+  .list :global(.s) { font-size: 0.9rem; color: var(--ink-2); }
+  .list :global(.m) { font-size: 0.82rem; color: var(--muted); }
+  .list :global(.r) { text-align: right; display: grid; gap: 0.25rem; justify-items: end; align-content: start; }
+  .list :global(.p) { font-family: var(--font-head); font-weight: 800; }
+  .list :global(.cta) { grid-column: 1 / -1; font-size: 0.86rem; font-weight: 650; color: var(--ok); }
+  .list :global(.badge) { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px; white-space: nowrap; }
+  .list :global(.badge.menunggu) { background: #fff3d1; color: #8a6400; }
+  .list :global(.badge.dikerjakan) { background: #e3ecff; color: #2747a8; }
+  .list :global(.badge.selesai) { background: #dff5ec; color: var(--ok); }
+  .list :global(.badge.batal), .list :global(.badge.dihapus) { background: #eeeae4; color: var(--muted); }
+  .empty { display: flex; gap: 0.9rem; align-items: flex-start; color: var(--muted); padding: 0.5rem 0.25rem; }
+  .empty[hidden] { display: none; }
+  .empty :global(svg) { flex: none; color: var(--ink); margin-top: 2px; }
+  .empty p { margin: 0; }
+  .empty b { color: var(--ink); }
+  @media (max-width: 900px) { .mine { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<script>
+  import { readStruk, refreshStruk, needsRefresh, serviceTitle, STATUS_LABEL, type StoredStruk } from '../lib/struk';
+  import { rupiah } from '../lib/supabase';
+
+  const list = document.querySelector<HTMLUListElement>('[data-list]')!;
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  const el = (tag: string, cls: string, text = '') => { const n = document.createElement(tag); n.className = cls; n.textContent = text; return n; };
+
+  function render(items: StoredStruk[]) {
+    document.querySelector('[data-empty]')!.toggleAttribute('hidden', items.length > 0);
+    document.querySelector('[data-count]')!.textContent = items.length ? String(items.length) : '';
+    list.replaceChildren(...items.map((s) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `/struk?kode=${encodeURIComponent(s.code)}`;
+      const left = el('span', 'l');
+      left.append(el('span', 'c', s.code), el('span', 's', serviceTitle(s.service)), el('span', 'm', fmt(s.createdAt)));
+      const right = el('span', 'r');
+      right.append(el('span', `badge ${s.status}`, STATUS_LABEL[s.status]));
+      const price = s.finalPrice ?? null;
+      if (price !== null) right.append(el('span', 'p', rupiah(price)));
+      a.append(left, right);
+      if (s.status === 'selesai' && !s.reviewed) a.append(el('span', 'cta', 'Pesanan selesai. Tulis ulasan →'));
+      li.append(a);
+      return li;
+    }));
+  }
+
+  let items = readStruk().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  render(items);
+  // perbarui maks. 8 struk yang statusnya masih bisa berubah
+  const stale = items.filter(needsRefresh).slice(0, 8);
+  Promise.allSettled(stale.map((s) => refreshStruk(s))).then(() => {
+    if (!stale.length) return;
+    items = readStruk().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    render(items);
+  });
+</script>

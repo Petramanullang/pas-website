@@ -7,7 +7,10 @@ const LS = 'pas-admin-session';
 
 export type Session = { access_token: string; refresh_token: string; expires_at: number; email: string };
 export type Code = { code: string; client_name: string | null; service: string | null; note: string | null; created_at: string; used_at: string | null };
-export type AdminReview = { id: string; code: string; name: string; service: string; rating: number; comment: string; is_visible: boolean; created_at: string };
+export type AdminReview = {
+  id: string; code: string | null; name: string; service: string; rating: number; comment: string; is_visible: boolean; created_at: string;
+  source: 'kode' | 'struk'; order_code: string | null; approved_at: string | null;
+};
 
 export class AuthError extends Error {}
 
@@ -103,9 +106,12 @@ export const api = {
     rpc<string>('pas_admin_new_code', { p_client_name: client_name, p_service: service, p_note: note }),
   deleteCode: (code: string) => rest<void>(`pas_order_codes?code=eq.${encodeURIComponent(code)}`, { method: 'DELETE' }),
   listReviews: () =>
-    rest<AdminReview[]>('pas_reviews?select=id,code,name,service,rating,comment,is_visible,created_at&order=created_at.desc&limit=500'),
+    rest<AdminReview[]>('pas_reviews?select=id,code,name,service,rating,comment,is_visible,created_at,source,order_code,approved_at&order=created_at.desc&limit=500'),
+  /** Tampilkan / sembunyikan. Keduanya menandai ulasan sudah ditinjau. */
   setVisible: (id: string, is_visible: boolean) =>
-    rest<void>(`pas_reviews?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ is_visible }), headers: { Prefer: 'return=minimal' } }),
+    rest<void>(`pas_reviews?id=eq.${id}`, {
+      method: 'PATCH', body: JSON.stringify({ is_visible, approved_at: new Date().toISOString() }), headers: { Prefer: 'return=minimal' },
+    }),
   deleteReview: (id: string) => rest<void>(`pas_reviews?id=eq.${id}`, { method: 'DELETE' }),
 };
 
@@ -182,9 +188,17 @@ export type AdminPromo = {
   personal_for: string | null;
   note: string | null;
   is_active: boolean;
+  days: number[];
+  time_start: string | null;
+  time_end: string | null;
+  per_person_limit: number | null;
+  class_mode: 'Online' | 'Offline' | null;
   created_at: string;
 };
-export type PromoUse = { id: string; code: string; name: string | null; service: string | null; status: 'used' | 'cancelled'; created_at: string };
+export type PromoUse = {
+  id: string; code: string; name: string | null; service: string | null; phone: string | null; class_mode: string | null;
+  status: 'used' | 'cancelled'; created_at: string;
+};
 export type PromoInput = Omit<AdminPromo, 'created_at'>;
 
 export const promos = {
@@ -206,4 +220,20 @@ export const feedback = {
   setStatus: (id: string, status: Feedback['status']) =>
     rest<void>(`pas_feedback?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status }), headers: { Prefer: 'return=minimal' } }),
   remove: (id: string) => rest<void>(`pas_feedback?id=eq.${id}`, { method: 'DELETE' }),
+};
+
+// ---------- Pesanan (struk) ----------
+export type AdminOrder = {
+  code: string; phone: string; name: string; service: string; detail: string; extra: Record<string, string>;
+  est_price: number | null; promo_code: string | null; final_price: number | null;
+  status: 'menunggu' | 'dikerjakan' | 'selesai' | 'batal'; admin_note: string | null;
+  created_at: string; updated_at: string; finished_at: string | null; reviewed_at: string | null;
+};
+export type OrderPatch = Partial<Pick<AdminOrder, 'status' | 'final_price' | 'admin_note'>>;
+
+export const orders = {
+  list: () => rest<AdminOrder[]>('pas_orders?select=*&order=created_at.desc&limit=1000'),
+  update: (code: string, p: OrderPatch) =>
+    rest<AdminOrder[]>(`pas_orders?code=eq.${encodeURIComponent(code)}`, { method: 'PATCH', body: JSON.stringify(p), headers: { Prefer: 'return=representation' } }),
+  remove: (code: string) => rest<void>(`pas_orders?code=eq.${encodeURIComponent(code)}`, { method: 'DELETE' }),
 };

@@ -11,11 +11,25 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
       <div class="intro">
         <p class="kicker">Ulasan pelanggan</p>
         <h1>Bagaimana pengalamanmu?</h1>
-        <p class="muted">Ulasanmu membantu orang lain memilih dengan tenang. Masukkan kode ulasan yang kamu terima setelah pesanan selesai.</p>
+        <p class="muted" data-intro>Ulasanmu membantu orang lain memilih dengan tenang. Masukkan kode ulasan dari Petra, atau buka dari <a href="/pesananku">struk pesananmu</a>.</p>
       </div>
 
       <form class="card form" id="review-form" novalidate>
-        <div class="field">
+        <div class="struk-box" data-struk-box hidden>
+          <div class="sb-top">
+            <span class="sb-k"><Icon name="shield" size={18} /> Ulasan dari struk</span>
+            <a href="/pesananku" class="sb-link">Ganti struk</a>
+          </div>
+          <strong class="sb-code" data-struk-code></strong>
+          <span class="sb-svc" data-struk-svc></span>
+          <div class="field" data-struk-phone hidden>
+            <label for="r-phone">Nomor WhatsApp saat memesan <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="r-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="0812 3456 7890" />
+          </div>
+          <p class="msg" role="status" aria-live="polite" data-struk-msg></p>
+        </div>
+
+        <div class="field" data-code-wrap>
           <label for="r-code">Kode ulasan <span class="req" aria-hidden="true">*</span></label>
           <div class="code-row">
             <input class="input code" id="r-code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PAS-XXXXXX" maxlength="24" required aria-describedby="r-code-msg" />
@@ -47,7 +61,7 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
             <input class="input" id="r-name" name="name" type="text" autocomplete="name" maxlength="60" placeholder="Boleh nama panggilan" required />
             <p class="error" id="e-name" hidden>Nama minimal 2 karakter.</p>
           </div>
-          <div class="field">
+          <div class="field" data-svc-wrap>
             <label for="r-service">Layanan yang dipesan <span class="req" aria-hidden="true">*</span></label>
             <select class="select" id="r-service" name="service" required>
               <option value="" disabled selected>Pilih layanan…</option>
@@ -66,7 +80,7 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
           </div>
         </div>
 
-        <p class="consent">Nama, rating, dan komentarmu akan ditampilkan di website ini. Kode ulasan tidak ditampilkan.</p>
+        <p class="consent">Nama, layanan, rating, dan komentarmu akan ditampilkan di website ini setelah dicek Petra. Kode dan nomor WhatsApp tidak ditampilkan.</p>
 
         <button class="btn btn--block submit" type="submit" data-submit>Kirim ulasan</button>
         <p class="status" role="status" aria-live="polite" data-status></p>
@@ -75,9 +89,9 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
       <div class="card done" data-done hidden tabindex="-1">
         <span class="ok"><Icon name="check" size={34} /></span>
         <h2>Terima kasih atas ulasanmu!</h2>
-        <p class="muted">Ulasanmu sudah tersimpan dan tampil di bagian testimoni.</p>
+        <p class="muted">Ulasanmu sudah tersimpan dan akan tampil di halaman testimoni setelah dicek Petra.</p>
         <div class="done-actions">
-          <a class="btn" href="/#testimoni">Lihat testimoni</a>
+          <a class="btn" href="/testimoni">Lihat testimoni</a>
           <a class="btn btn--ghost" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" /> Order lagi</a>
         </div>
       </div>
@@ -123,6 +137,15 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
   .status { margin: 0; min-height: 1.4em; font-size: 0.92rem; }
   .status.is-bad { color: var(--err); font-weight: 600; }
 
+  .struk-box { display: grid; gap: 0.35rem; padding: 1rem 1.1rem; border-radius: 18px; background: #e6f5ec; }
+  .struk-box[hidden] { display: none; }
+  .sb-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .sb-k { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; font-weight: 700; color: var(--ok); }
+  .sb-link { font-size: 0.85rem; font-weight: 650; color: var(--ink); }
+  .sb-code { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 1.25rem; overflow-wrap: anywhere; }
+  .sb-svc { color: var(--ink-2); font-size: 0.92rem; }
+  .struk-box .field { margin-top: 0.4rem; }
+  [data-code-wrap][hidden], [data-svc-wrap][hidden], [data-struk-phone][hidden] { display: none; }
   .done { padding: 2.5rem 1.5rem; text-align: center; display: grid; justify-items: center; gap: 0.25rem; box-shadow: var(--shadow); }
   .done[hidden] { display: none; }
   .ok { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: #dff5ec; color: var(--ok); margin-bottom: 0.75rem; }
@@ -134,7 +157,8 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
 </style>
 
 <script>
-  import { checkCode, submitReview, isConfigured } from '../lib/supabase';
+  import { checkCode, submitReview, submitOrderReview, orderStatus, isConfigured } from '../lib/supabase';
+  import { findStruk, updateStruk, saveStruk, fromInfo, isStrukCode, normCode, phoneValid, serviceTitle } from '../lib/struk';
   import { SERVICES } from '../config';
 
   const form = document.getElementById('review-form') as HTMLFormElement;
@@ -216,9 +240,53 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
     if (el) el.setAttribute('aria-invalid', String(on));
   }
 
+  // ---------- mode struk: /ulasan?struk=PAS-YYMMDD-XXXXXX ----------
+  const strukCode = normCode(new URLSearchParams(location.search).get('struk') ?? '');
+  const strukMode = isStrukCode(strukCode);
+  const rPhone = form.querySelector<HTMLInputElement>('#r-phone')!;
+  const strukMsg = $<HTMLParagraphElement>('[data-struk-msg]');
+  let strukOk = false;
+  const sMsg = (t: string, kind: '' | 'ok' | 'bad' = '') => { strukMsg.textContent = t; strukMsg.className = kind ? `msg is-${kind}` : 'msg'; };
+
+  async function checkStruk() {
+    const phoneVal = findStruk(strukCode)?.phone || rPhone.value;
+    if (!phoneValid(phoneVal)) { strukOk = false; sMsg('Isi nomor WhatsApp yang dipakai saat memesan.'); return; }
+    sMsg('Memeriksa struk…');
+    try {
+      const r = await orderStatus(strukCode, phoneVal);
+      if (r.status !== 'ok') { strukOk = false; $('[data-struk-phone]').toggleAttribute('hidden', false); sMsg('Struk tidak cocok dengan nomor WhatsApp ini.', 'bad'); return; }
+      saveStruk(fromInfo(r));
+      $('[data-struk-svc]').textContent = serviceTitle(r.service);
+      if (!name.value) name.value = r.name;
+      if (r.reviewed) { strukOk = false; sMsg('Struk ini sudah dipakai untuk ulasan. Terima kasih!', 'bad'); }
+      else if (r.order_status !== 'selesai') { strukOk = false; sMsg('Ulasan bisa ditulis setelah pesanan ditandai selesai oleh Petra.', 'bad'); }
+      else { strukOk = true; sMsg('Struk valid. Ulasanmu akan diberi tanda Pembeli terverifikasi.', 'ok'); }
+    } catch {
+      strukOk = false; sMsg('Tidak bisa memeriksa struk sekarang. Cek koneksi lalu coba lagi.', 'bad');
+    }
+  }
+
+  if (strukMode) {
+    const local = findStruk(strukCode);
+    $('[data-struk-box]').toggleAttribute('hidden', false);
+    $('[data-code-wrap]').toggleAttribute('hidden', true);
+    $('[data-svc-wrap]').toggleAttribute('hidden', true);
+    $('[data-struk-code]').textContent = strukCode;
+    $('[data-struk-svc]').textContent = local ? serviceTitle(local.service) : '';
+    if (local) { name.value = local.name; checkStruk(); }
+    else { $('[data-struk-phone]').toggleAttribute('hidden', false); sMsg('Isi nomor WhatsApp yang dipakai saat memesan.'); }
+    rPhone.addEventListener('change', checkStruk);
+  }
+
+  // kode struk yang tidak sengaja ditempel di kolom kode ulasan
+  code.addEventListener('change', () => {
+    const v = norm(code.value);
+    if (isStrukCode(v)) location.href = `/ulasan?struk=${encodeURIComponent(v)}`;
+  });
+
   // kode dari link: /ulasan?kode=PAS-XXXXXX
   const fromUrl = new URLSearchParams(location.search).get('kode');
-  if (fromUrl) { code.value = norm(fromUrl); verify(); }
+  if (fromUrl && !strukMode) { code.value = norm(fromUrl); verify(); }
   if (!isConfigured) setMsg('Website belum terhubung ke database (cek file .env).', 'bad');
 
   form.addEventListener('submit', async (e) => {
@@ -232,11 +300,17 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
       comment: comment.value.trim().length < 10,
     };
     $('#e-rating').toggleAttribute('hidden', !errs.rating);
+    if (strukMode) errs.service = false;
     setErr(name, 'e-name', errs.name);
     setErr(service, 'e-service', errs.service);
     setErr(comment, 'e-comment', errs.comment);
-    if (codeState === 'unknown') await verify();
-    if (codeState !== 'ok') { code.focus(); return; }
+    if (strukMode) {
+      if (!strukOk) await checkStruk();
+      if (!strukOk) { (rPhone.offsetParent ? rPhone : strukMsg).scrollIntoView({ block: 'center' }); if (rPhone.offsetParent) rPhone.focus(); return; }
+    } else {
+      if (codeState === 'unknown') await verify();
+      if (codeState !== 'ok') { code.focus(); return; }
+    }
     if (Object.values(errs).some(Boolean)) {
       status.textContent = 'Ada isian yang belum lengkap.'; status.className = 'status is-bad';
       const first = errs.rating ? form.querySelector<HTMLInputElement>('#r-star-5') : errs.name ? name : errs.service ? service : comment;
@@ -247,15 +321,22 @@ const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
     submit.disabled = true;
     submit.textContent = 'Mengirim…';
     try {
-      const r = await submitReview({ code: norm(code.value), name: name.value.trim(), service: service.value, rating, comment: comment.value.trim() });
-      if (r.status === 'ok') {
+      const r = strukMode
+        ? await submitOrderReview({ code: strukCode, phone: findStruk(strukCode)?.phone || rPhone.value, name: name.value.trim(), rating, comment: comment.value.trim() })
+        : await submitReview({ code: norm(code.value), name: name.value.trim(), service: service.value, rating, comment: comment.value.trim() });
+      if (r.status === 'ok' && strukMode) updateStruk(strukCode, { reviewed: true });
+      if (r.status === 'not_finished' || r.status === 'not_found') {
+        strukOk = false;
+        sMsg(r.status === 'not_found' ? 'Struk tidak cocok dengan nomor WhatsApp ini.' : 'Ulasan bisa ditulis setelah pesanan ditandai selesai.', 'bad');
+      } else if (r.status === 'ok') {
         form.hidden = true;
         const done = document.querySelector<HTMLElement>('[data-done]')!;
         done.hidden = false;
         done.focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (r.status === 'used') {
-        codeState = 'used'; setMsg('Kode ini sudah dipakai untuk ulasan.', 'bad'); code.focus();
+        if (strukMode) { strukOk = false; sMsg('Struk ini sudah dipakai untuk ulasan.', 'bad'); }
+        else { codeState = 'used'; setMsg('Kode ini sudah dipakai untuk ulasan.', 'bad'); code.focus(); }
       } else if (r.status === 'invalid') {
         codeState = 'invalid'; setMsg('Kode tidak ditemukan.', 'bad'); code.focus();
       } else {

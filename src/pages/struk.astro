@@ -1,0 +1,248 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import StrukLookup from '../components/StrukLookup.astro';
+---
+
+<Base title="Struk Pesanan" description="Struk pesanan PAS: status pengerjaan, harga final, dan ulasan." noindex>
+  <section class="panel lost" data-lost hidden>
+    <p class="kicker">Struk pesanan</p>
+    <h1>Struk belum ada di perangkat ini.</h1>
+    <p class="muted">Masukkan kode struk dan nomor WhatsApp yang dipakai saat memesan. Kodenya ada di pesan WhatsApp yang kamu kirim.</p>
+    <StrukLookup />
+    <a class="back" href="/pesananku"><Icon name="arrowleft" size={18} /> Pesananku</a>
+  </section>
+
+  <div class="st" data-st hidden>
+    <article class="paper" aria-labelledby="st-code">
+      <header class="p-head">
+        <div class="brand">
+          <img src="/logo.svg" alt="" width="56" height="34" />
+          <span><strong>PAS</strong><em>Petra All Service</em></span>
+        </div>
+        <span class="badge" data-badge></span>
+      </header>
+      <div class="cut" aria-hidden="true"></div>
+      <p class="kicker">Struk pesanan</p>
+      <h1 class="code" id="st-code" data-code></h1>
+      <p class="muted when" data-when></p>
+      <div class="cut" aria-hidden="true"></div>
+      <dl class="rows" data-rows></dl>
+      <div class="det">
+        <span class="k">Detail</span>
+        <p data-detail></p>
+      </div>
+      <div class="cut" aria-hidden="true"></div>
+      <dl class="rows price" data-price></dl>
+      <div class="cut" aria-hidden="true"></div>
+      <p class="fine">Kode struk + nomor WhatsApp dipakai untuk membuka status dan menulis ulasan. Jangan bagikan keduanya ke orang lain.</p>
+    </article>
+
+    <aside class="side">
+      <section class="panel steps-card" aria-labelledby="st-status">
+        <div class="panel-title">
+          <h2 id="st-status">Status</h2>
+          <button class="btn btn--light btn--sm" type="button" data-refresh><Icon name="refresh" size={17} /> Perbarui</button>
+        </div>
+        <ol class="steps" data-steps>
+          <li data-step="menunggu"><span class="dot"></span><span><b>Pesanan diterima</b><em>Petra mengecek kebutuhan dan harga lewat WhatsApp.</em></span></li>
+          <li data-step="dikerjakan"><span class="dot"></span><span><b>Dikerjakan</b><em>Harga sudah disepakati dan pesanan sedang dikerjakan.</em></span></li>
+          <li data-step="selesai"><span class="dot"></span><span><b>Selesai</b><em>Hasil sudah diterima. Saatnya menulis ulasan.</em></span></li>
+        </ol>
+        <p class="cancel" data-cancel hidden>Pesanan ini dibatalkan. Hubungi Petra kalau ada yang ingin ditanyakan.</p>
+        <p class="checked muted" data-checked aria-live="polite"></p>
+      </section>
+
+      <section class="panel act">
+        <div data-review></div>
+        <button class="btn btn--block" type="button" data-png><Icon name="download" size={18} /> Unduh struk (gambar)</button>
+        <a class="btn btn--wa btn--block" data-ask target="_blank" rel="noopener"><Icon name="wa" /> Tanya soal pesanan ini</a>
+        <div class="links">
+          <a href="/pesananku"><Icon name="receipt" size={17} /> Semua struk</a>
+          <button type="button" data-remove>Hapus dari perangkat ini</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .lost { max-width: 760px; margin-inline: auto; display: grid; gap: 1rem; }
+  .lost h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0; }
+  .lost p { margin: 0; }
+  .back { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 650; color: var(--ink); text-decoration: none; justify-self: start; }
+
+  .st { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--gap); align-items: start; }
+  .st[hidden], .lost[hidden] { display: none; }
+
+  .paper {
+    position: relative; background: #fff; border-radius: var(--r-panel) var(--r-panel) 0 0; padding: clamp(1.4rem, 3.5vw, 2.4rem);
+    padding-bottom: calc(clamp(1.4rem, 3.5vw, 2.4rem) + 6px); border-top: 6px solid var(--brand);
+    --tooth: 14px;
+    -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+    mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+  }
+  .p-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .brand { display: flex; align-items: center; gap: 0.6rem; }
+  .brand img { width: 56px; height: auto; }
+  .brand span { display: grid; line-height: 1.15; }
+  .brand strong { font-family: var(--font-head); font-size: 1.15rem; }
+  .brand em { font-style: normal; font-size: 0.8rem; color: var(--muted); }
+  .badge { font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 99px; white-space: nowrap; }
+  .badge.menunggu { background: #fff3d1; color: #8a6400; }
+  .badge.dikerjakan { background: #e3ecff; color: #2747a8; }
+  .badge.selesai { background: #dff5ec; color: var(--ok); }
+  .badge.batal, .badge.dihapus { background: #eeeae4; color: var(--muted); }
+  .cut { border-top: 1.5px dashed #ddd8ce; margin: 1.15rem 0; }
+  .paper .kicker { margin-bottom: 0.3rem; }
+  .code { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: clamp(1.45rem, 4.6vw, 2.1rem); letter-spacing: 0.02em; margin: 0; overflow-wrap: anywhere; }
+  .when { margin: 0.35rem 0 0; font-size: 0.92rem; }
+  .rows { display: grid; gap: 0.6rem; margin: 0; }
+  .rows :global(div) { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+  .rows :global(dt) { color: var(--muted); font-size: 0.92rem; flex: none; }
+  .rows :global(dd) { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .price :global(div.big dd) { font-family: var(--font-head); font-size: 1.35rem; font-weight: 800; }
+  .price :global(div.big dt) { color: var(--ink); font-weight: 650; }
+  .det { margin-top: 0.9rem; display: grid; gap: 0.25rem; }
+  .det .k { color: var(--muted); font-size: 0.92rem; }
+  .det p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+  .fine { margin: 0; font-size: 0.82rem; color: var(--muted); }
+
+  .side { display: grid; gap: var(--gap); position: sticky; top: calc(var(--header-h, 84px) + 12px); }
+  .steps-card h2 { font-size: 1.35rem; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .steps li { display: grid; grid-template-columns: 22px 1fr; gap: 0.8rem; position: relative; padding-bottom: 1.1rem; color: var(--muted); }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps li:not(:last-child)::before { content: ''; position: absolute; left: 10px; top: 22px; bottom: 0; width: 2px; background: var(--line); }
+  .steps .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); background: #fff; margin-top: 1px; }
+  .steps span:last-child { display: grid; gap: 0.1rem; }
+  .steps em { font-style: normal; font-size: 0.86rem; }
+  .steps li.done { color: var(--ink); }
+  .steps li.done .dot { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 4px #fff; }
+  .steps li.done:not(:last-child)::before { background: var(--ink); }
+  .steps li.now b { color: var(--ink); }
+  .steps.off li { opacity: 0.45; }
+  .cancel { margin: 1rem 0 0; padding: 0.8rem 1rem; border-radius: 14px; background: #eeeae4; font-weight: 600; font-size: 0.92rem; }
+  .cancel[hidden] { display: none; }
+  .checked { margin: 0.9rem 0 0; font-size: 0.82rem; }
+
+  .act { display: grid; gap: 0.65rem; }
+  .act :global(.rv-note) { margin: 0 0 0.25rem; padding: 0.85rem 1rem; border-radius: 16px; background: var(--panel-2); font-size: 0.92rem; }
+  .act :global(.rv-note.ok) { background: #dff5ec; }
+  .act :global(.rv-note b) { display: block; margin-bottom: 0.15rem; }
+  .links { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; font-size: 0.9rem; }
+  .links a { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 650; color: var(--ink); text-decoration: none; }
+  .links button { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
+
+  @media (max-width: 900px) {
+    .st { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; }
+  }
+</style>
+
+<script>
+  import { waLink } from '../config';
+  import { findStruk, refreshStruk, removeStruk, normCode, STATUS_LABEL, detailRows, priceRows, fmtDateTime, type StoredStruk } from '../lib/struk';
+  import { downloadStrukPng } from '../lib/strukImage';
+
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+  const code = normCode(new URLSearchParams(location.search).get('kode') ?? '');
+  if (!code) location.replace('/pesananku');
+
+  let cur = code ? findStruk(code) : null;
+  const order = ['menunggu', 'dikerjakan', 'selesai'];
+
+  function dl(target: HTMLElement, rows: [string, string, boolean?][]) {
+    target.replaceChildren(...rows.map(([k, v, big]) => {
+      const d = document.createElement('div');
+      if (big) d.className = 'big';
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      d.append(dt, dd);
+      return d;
+    }));
+  }
+
+  function render(s: StoredStruk) {
+    $('[data-lost]').toggleAttribute('hidden', true);
+    $('[data-st]').toggleAttribute('hidden', false);
+    document.title = `Struk ${s.code} · PAS`;
+    const badge = $<HTMLElement>('[data-badge]');
+    badge.textContent = STATUS_LABEL[s.status];
+    badge.className = `badge ${s.status}`;
+    $('[data-code]').textContent = s.code;
+    $('[data-when]').textContent = fmtDateTime(s.createdAt);
+    dl($('[data-rows]'), detailRows(s));
+    $('[data-detail]').textContent = s.detail;
+    dl($('[data-price]'), priceRows(s));
+
+    const idx = order.indexOf(s.status);
+    document.querySelectorAll<HTMLElement>('[data-step]').forEach((li, i) => {
+      li.classList.toggle('done', idx >= i);
+      li.classList.toggle('now', idx === i);
+      if (idx === i) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    });
+    $('[data-steps]').classList.toggle('off', s.status === 'batal' || s.status === 'dihapus');
+    const cancel = $<HTMLElement>('[data-cancel]');
+    cancel.hidden = !(s.status === 'batal' || s.status === 'dihapus');
+    cancel.textContent = s.status === 'dihapus'
+      ? 'Struk ini sudah tidak ada di sistem. Hubungi Petra kalau ada yang ingin ditanyakan.'
+      : 'Pesanan ini dibatalkan. Hubungi Petra kalau ada yang ingin ditanyakan.';
+    if (s.checkedAt) {
+      $('[data-checked]').textContent = `Diperbarui ${new Date(s.checkedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    const rv = $<HTMLElement>('[data-review]');
+    rv.replaceChildren();
+    const note = (title: string, body: string, ok = false) => {
+      const p = document.createElement('p');
+      p.className = `rv-note${ok ? ' ok' : ''}`;
+      const b = document.createElement('b'); b.textContent = title;
+      p.append(b, body);
+      rv.append(p);
+    };
+    if (s.status === 'selesai' && !s.reviewed) {
+      note('Pesanan selesai', 'Ceritakan pengalamanmu. Ulasanmu akan diberi tanda Pembeli terverifikasi.');
+      const a = document.createElement('a');
+      a.className = 'btn btn--brand btn--block';
+      a.href = `/ulasan?struk=${encodeURIComponent(s.code)}`;
+      a.textContent = 'Tulis ulasan';
+      rv.append(a);
+    } else if (s.reviewed) {
+      note('Ulasan terkirim', 'Terima kasih! Ulasanmu tampil setelah dicek Petra.', true);
+    } else if (s.status !== 'batal' && s.status !== 'dihapus') {
+      note('Ulasan', 'Tombol tulis ulasan terbuka setelah pesanan ditandai selesai.');
+    }
+    const ask = $<HTMLAnchorElement>('[data-ask]');
+    ask.href = waLink(`Halo Kak Petra, saya mau tanya soal pesanan dengan kode struk ${s.code}.`);
+  }
+
+  async function refresh(manual = false) {
+    if (!cur) return;
+    const btn = $<HTMLButtonElement>('[data-refresh]');
+    btn.disabled = true;
+    if (manual) $('[data-checked]').textContent = 'Memperbarui…';
+    try {
+      cur = await refreshStruk(cur);
+      render(cur);
+    } catch {
+      $('[data-checked]').textContent = 'Tidak bisa memperbarui sekarang. Periksa koneksi.';
+    } finally { btn.disabled = false; }
+  }
+
+  if (cur) { render(cur); refresh(); }
+  else if (code) $('[data-lost]').toggleAttribute('hidden', false);
+
+  $('[data-refresh]').addEventListener('click', () => refresh(true));
+  $('[data-png]').addEventListener('click', async (e) => {
+    if (!cur) return;
+    const b = e.currentTarget as HTMLButtonElement;
+    b.disabled = true;
+    try { await downloadStrukPng(cur); } finally { b.disabled = false; }
+  });
+  $('[data-remove]').addEventListener('click', () => {
+    if (!cur || !confirm(`Hapus struk ${cur.code} dari perangkat ini? Kamu masih bisa membukanya lagi dengan kode + nomor WhatsApp.`)) return;
+    removeStruk(cur.code);
+    location.href = '/pesananku';
+  });
+</script>

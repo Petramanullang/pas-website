@@ -1,0 +1,64 @@
+---
+// Cari struk dengan kode + nomor WA (untuk pembeli yang ganti HP / data browser terhapus).
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+
+<form class:list={['lookup', { compact }]} data-lookup novalidate>
+  <div class="row">
+    <div class="field">
+      <label for="lk-code">Kode struk</label>
+      <input class="input mono" id="lk-code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="PAS-261115-ABC123" />
+    </div>
+    <div class="field">
+      <label for="lk-phone">Nomor WhatsApp</label>
+      <input class="input" id="lk-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="0812 3456 7890" />
+    </div>
+    <button class="btn" type="submit" data-lk-btn>Cari struk</button>
+  </div>
+  <p class="lk-msg" role="status" aria-live="polite" data-lk-msg></p>
+</form>
+
+<style>
+  .lookup { display: grid; gap: 0.5rem; }
+  .row { display: grid; grid-template-columns: 1.1fr 1fr auto; gap: 0.75rem; align-items: end; }
+  .compact .row { grid-template-columns: 1fr; }
+  .row .btn { min-height: 50px; }
+  .mono { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 650; }
+  .mono::placeholder { font-weight: 400; }
+  .lk-msg { margin: 0; font-size: 0.88rem; min-height: 1.2em; color: var(--muted); }
+  .lk-msg.bad { color: var(--err); font-weight: 600; }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { orderStatus } from '../lib/supabase';
+  import { fromInfo, saveStruk, normCode, isStrukCode, phoneValid } from '../lib/struk';
+
+  document.querySelectorAll<HTMLFormElement>('[data-lookup]').forEach((form) => {
+    const code = form.querySelector<HTMLInputElement>('#lk-code')!;
+    const phone = form.querySelector<HTMLInputElement>('#lk-phone')!;
+    const msg = form.querySelector<HTMLElement>('[data-lk-msg]')!;
+    const btn = form.querySelector<HTMLButtonElement>('[data-lk-btn]')!;
+    const say = (t: string, bad = false) => { msg.textContent = t; msg.className = `lk-msg${bad ? ' bad' : ''}`; };
+    const pre = new URLSearchParams(location.search).get('kode');
+    if (pre) code.value = normCode(pre);
+    code.addEventListener('input', () => { code.value = normCode(code.value); });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const c = normCode(code.value);
+      if (!isStrukCode(c)) { say('Kode struk berbentuk PAS-YYMMDD-XXXXXX, misal PAS-261115-ABC123.', true); code.focus(); return; }
+      if (!phoneValid(phone.value)) { say('Tulis nomor WhatsApp yang dipakai saat memesan.', true); phone.focus(); return; }
+      btn.disabled = true; say('Mencari struk…');
+      try {
+        const r = await orderStatus(c, phone.value);
+        if (r.status !== 'ok') { say('Struk tidak ditemukan. Periksa kode dan nomor WhatsApp-nya.', true); return; }
+        saveStruk(fromInfo(r));
+        location.href = `/struk?kode=${encodeURIComponent(r.code)}`;
+      } catch {
+        say('Tidak bisa terhubung. Periksa koneksi lalu coba lagi.', true);
+      } finally { btn.disabled = false; }
+    });
+  });
+</script>

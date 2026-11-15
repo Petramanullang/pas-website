@@ -59,8 +59,8 @@ import { SERVICES } from '../config';
       <div class="stats">
         <div class="stat card"><span>Rata-rata rating</span><strong data-s-avg>0</strong></div>
         <div class="stat card"><span>Ulasan tampil</span><strong data-s-visible>0</strong></div>
-        <div class="stat card"><span>Ulasan disembunyikan</span><strong data-s-hidden>0</strong></div>
-        <div class="stat card"><span>Kode belum dipakai</span><strong data-s-open>0</strong></div>
+        <div class="stat card"><span>Ulasan menunggu dicek</span><strong data-s-hidden>0</strong></div>
+        <div class="stat card"><span>Pesanan berjalan</span><strong data-s-open>0</strong></div>
       </div>
 
       <div class="grid">
@@ -95,14 +95,30 @@ import { SERVICES } from '../config';
 
         <div class="card panel">
           <div class="tabs" role="tablist" aria-label="Data">
-            <button role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="true" type="button" data-tab="reviews">Ulasan <span data-c-reviews>0</span></button>
+            <button role="tab" id="tab-orders" aria-controls="panel-orders" aria-selected="true" type="button" data-tab="orders">Pesanan <span data-c-orders>0</span></button>
+            <button role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="false" type="button" data-tab="reviews" tabindex="-1">Ulasan <span data-c-reviews>0</span></button>
             <button role="tab" id="tab-codes" aria-controls="panel-codes" aria-selected="false" type="button" data-tab="codes" tabindex="-1">Kode <span data-c-codes>0</span></button>
             <button role="tab" id="tab-projects" aria-controls="panel-projects" aria-selected="false" type="button" data-tab="projects" tabindex="-1">Karya <span data-c-projects>0</span></button>
             <button role="tab" id="tab-promos" aria-controls="panel-promos" aria-selected="false" type="button" data-tab="promos" tabindex="-1">Promo <span data-c-promos>0</span></button>
             <button role="tab" id="tab-feedback" aria-controls="panel-feedback" aria-selected="false" type="button" data-tab="feedback" tabindex="-1">Saran <span data-c-feedback>0</span></button>
           </div>
 
-          <div role="tabpanel" id="panel-reviews" aria-labelledby="tab-reviews" class="tabpanel" data-panel="reviews">
+          <div role="tabpanel" id="panel-orders" aria-labelledby="tab-orders" class="tabpanel" data-panel="orders">
+            <div class="proj-bar">
+              <div class="fb-filter" role="group" aria-label="Filter status pesanan" data-or-filter>
+                <button type="button" data-st="" aria-pressed="true">Semua</button>
+                <button type="button" data-st="menunggu" aria-pressed="false">Menunggu</button>
+                <button type="button" data-st="dikerjakan" aria-pressed="false">Dikerjakan</button>
+                <button type="button" data-st="selesai" aria-pressed="false">Selesai</button>
+                <button type="button" data-st="batal" aria-pressed="false">Batal</button>
+              </div>
+              <input class="input or-search" type="search" placeholder="Cari kode, nama, nomor…" aria-label="Cari pesanan" data-or-search />
+            </div>
+            <p class="muted small or-help">Pesanan masuk dari form <a href="/pesan" target="_blank">/pesan</a>. Ubah status jadi <b>Selesai</b> supaya pembeli bisa menulis ulasan dari struknya.</p>
+            <div class="list" data-orders></div>
+            <p class="empty muted" data-orders-empty hidden>Belum ada pesanan.</p>
+          </div>
+          <div role="tabpanel" id="panel-reviews" aria-labelledby="tab-reviews" class="tabpanel" data-panel="reviews" hidden>
             <div class="list" data-reviews></div>
             <p class="empty muted" data-reviews-empty hidden>Belum ada ulasan.</p>
           </div>
@@ -204,84 +220,157 @@ import { SERVICES } from '../config';
       </form>
     </dialog>
 
-    <dialog class="pdlg" data-mdlg aria-labelledby="mdlg-title">
-      <form class="pform" id="promo-form" method="dialog" novalidate>
+    <dialog class="pdlg mdlg" data-mdlg aria-labelledby="mform-title">
+      <form class="pform mform" id="promo-form" novalidate>
         <div class="pform-head">
-          <h2 id="mdlg-title" data-mdlg-title>Buat promo</h2>
+          <div>
+            <h2 id="mform-title" data-mdlg-title>Buat promo</h2>
+            <p class="muted small sub">Semua syarat opsional. Yang dikosongkan berarti tanpa batas.</p>
+          </div>
           <button class="round round--light" type="button" data-mdlg-close aria-label="Tutup"><Icon name="close" size={20} /></button>
         </div>
-
-        <div class="field">
-          <label for="m-code">Kode promo <span class="req">*</span></label>
-          <div class="link-row">
-            <input class="input mono-up" id="m-code" maxlength="24" placeholder="HEMAT20" autocomplete="off" />
-            <button class="btn btn--sm btn--light" type="button" data-rand-code>Acak</button>
+        <div class="mcols">
+          <div class="mcol">
+              <section class="msec" aria-labelledby="ms-1">
+                <h3 id="ms-1">Kode &amp; potongan</h3>
+                <div class="field">
+                  <label for="m-code">Kode promo <span class="req">*</span></label>
+                  <div class="link-row">
+                    <input class="input mono-up" id="m-code" maxlength="24" placeholder="HEMAT20" autocomplete="off" />
+                    <button class="btn btn--sm btn--light" type="button" data-rand-code>Acak</button>
+                  </div>
+                  <span class="hint">Huruf besar, angka, minus. 3 sampai 24 karakter.</span>
+                </div>
+                <div class="field">
+                  <label for="m-title">Judul promo <span class="opt">(tampil ke pelanggan)</span></label>
+                  <input class="input" id="m-title" maxlength="80" placeholder="Contoh: Promo akhir semester" />
+                </div>
+                <fieldset class="field fs">
+                  <legend class="label">Jenis potongan</legend>
+                  <div class="seg3">
+                    <label><input type="radio" name="m-type" value="percent" checked /> <span>Persen</span></label>
+                    <label><input type="radio" name="m-type" value="amount" /> <span>Nominal</span></label>
+                    <label><input type="radio" name="m-type" value="fixed_price" /> <span>Harga spesial</span></label>
+                  </div>
+                </fieldset>
+                <div class="row2">
+                  <div class="field">
+                    <label for="m-value" data-value-label>Diskon (%)</label>
+                    <input class="input" id="m-value" type="number" inputmode="numeric" min="1" />
+                  </div>
+                  <div class="field" data-max-wrap>
+                    <label for="m-max">Maks. potongan <span class="opt">(Rp)</span></label>
+                    <input class="input" id="m-max" type="number" inputmode="numeric" min="1" placeholder="25000" />
+                  </div>
+                </div>
+              </section>
+              <section class="msec" aria-labelledby="ms-5">
+                <h3 id="ms-5">Lainnya</h3>
+                <div class="field">
+                  <label for="m-note">Catatan <span class="opt">(hanya untukmu)</span></label>
+                  <input class="input" id="m-note" maxlength="200" />
+                </div>
+                <label class="check"><input type="checkbox" id="m-active" checked /> Aktif</label>
+              </section>
           </div>
-          <span class="hint">Huruf besar, angka, dan tanda minus. 3 sampai 24 karakter.</span>
-        </div>
-        <div class="field">
-          <label for="m-title">Judul promo <span class="opt">(tampil ke pelanggan)</span></label>
-          <input class="input" id="m-title" maxlength="80" placeholder="Contoh: Promo akhir semester" />
-        </div>
-
-        <fieldset class="field fs">
-          <legend class="label">Jenis potongan</legend>
-          <div class="seg3">
-            <label><input type="radio" name="m-type" value="percent" checked /> <span>Persen</span></label>
-            <label><input type="radio" name="m-type" value="amount" /> <span>Nominal</span></label>
-            <label><input type="radio" name="m-type" value="fixed_price" /> <span>Harga spesial</span></label>
+          <div class="mcol">
+              <section class="msec" aria-labelledby="ms-2">
+                <h3 id="ms-2">Kapan berlaku</h3>
+                <div class="field">
+                  <label for="m-start">Mulai</label>
+                  <input class="input" id="m-start" type="datetime-local" />
+                </div>
+                <div class="field">
+                  <label for="m-end">Berakhir</label>
+                  <input class="input" id="m-end" type="datetime-local" />
+                  <div class="quick" role="group" aria-label="Isi cepat tanggal berakhir">
+                    <button type="button" data-end="7">7 hari</button>
+                    <button type="button" data-end="14">14 hari</button>
+                    <button type="button" data-end="30">30 hari</button>
+                    <button type="button" data-end="month">Akhir bulan</button>
+                    <button type="button" data-end="">Tanpa batas</button>
+                  </div>
+                </div>
+                <fieldset class="field fs">
+                  <legend class="label">Hari berlaku <span class="opt">(tidak dipilih = setiap hari)</span></legend>
+                  <div class="days">
+                    {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((d, i) => (
+                      <label><input type="checkbox" name="m-day" value={i + 1} /> <span>{d}</span></label>
+                    ))}
+                  </div>
+                  <div class="quick" role="group" aria-label="Pilih hari cepat">
+                    <button type="button" data-days="1,2,3,4,5">Hari kerja</button>
+                    <button type="button" data-days="6,7">Akhir pekan</button>
+                    <button type="button" data-days="">Setiap hari</button>
+                  </div>
+                </fieldset>
+                <label class="check"><input type="checkbox" id="m-hours" /> Hanya jam tertentu</label>
+                <div class="row2" data-hours-wrap hidden>
+                  <div class="field">
+                    <label for="m-tstart">Dari jam</label>
+                    <input class="input" id="m-tstart" type="time" value="19:00" />
+                  </div>
+                  <div class="field">
+                    <label for="m-tend">Sampai jam</label>
+                    <input class="input" id="m-tend" type="time" value="22:00" />
+                  </div>
+                  <span class="hint span2">WIB. Boleh lewat tengah malam (22.00 sampai 02.00).</span>
+                </div>
+              </section>
           </div>
-        </fieldset>
-        <div class="row2">
-          <div class="field">
-            <label for="m-value" data-value-label>Diskon (%)</label>
-            <input class="input" id="m-value" type="number" inputmode="numeric" min="1" />
-          </div>
-          <div class="field" data-max-wrap>
-            <label for="m-max">Maks. potongan (Rp) <span class="opt">(opsional)</span></label>
-            <input class="input" id="m-max" type="number" inputmode="numeric" min="1" placeholder="25000" />
+          <div class="mcol">
+              <section class="msec" aria-labelledby="ms-3">
+                <h3 id="ms-3">Batas pemakaian</h3>
+                <label class="check"><input type="checkbox" id="m-personal" /> Khusus 1 orang (sekali pakai)</label>
+                <div class="field" data-personal-wrap hidden>
+                  <label for="m-personal-for">Untuk siapa?</label>
+                  <input class="input" id="m-personal-for" maxlength="80" placeholder="Contoh: Budi (klien lama)" />
+                </div>
+                <div class="field" data-quota-wrap>
+                  <label for="m-quota">Kuota total <span class="opt">(kosong = tanpa batas)</span></label>
+                  <input class="input" id="m-quota" type="number" inputmode="numeric" min="1" placeholder="Contoh: 10" />
+                  <div class="quick" role="group" aria-label="Isi cepat kuota">
+                    <button type="button" data-quota="5">5</button>
+                    <button type="button" data-quota="10">10</button>
+                    <button type="button" data-quota="25">25</button>
+                    <button type="button" data-quota="50">50</button>
+                    <button type="button" data-quota="">Tanpa batas</button>
+                  </div>
+                </div>
+                <div class="field" data-ppl-wrap>
+                  <label for="m-ppl">Maks. per orang <span class="opt">(kosong = bebas)</span></label>
+                  <input class="input" id="m-ppl" type="number" inputmode="numeric" min="1" placeholder="Contoh: 1" />
+                  <span class="hint">Dicek dari nomor WhatsApp pembeli.</span>
+                </div>
+              </section>
+              <section class="msec" aria-labelledby="ms-4">
+                <h3 id="ms-4">Syarat pesanan</h3>
+                <fieldset class="field fs">
+                  <legend class="label">Layanan <span class="opt">(tidak dicentang = semua)</span></legend>
+                  <div class="svc-checks">
+                    {SERVICES.map((s) => <label class="check"><input type="checkbox" name="m-svc" value={s.id} /> {s.short}</label>)}
+                  </div>
+                </fieldset>
+                <fieldset class="field fs" data-mode-wrap>
+                  <legend class="label">Mode kelas coding</legend>
+                  <div class="seg3">
+                    <label><input type="radio" name="m-mode" value="" checked /> <span>Semua</span></label>
+                    <label><input type="radio" name="m-mode" value="Online" /> <span>Online</span></label>
+                    <label><input type="radio" name="m-mode" value="Offline" /> <span>Offline</span></label>
+                  </div>
+                </fieldset>
+              </section>
           </div>
         </div>
-
-        <fieldset class="field fs">
-          <legend class="label">Berlaku untuk layanan <span class="opt">(tidak dicentang semua = semua layanan)</span></legend>
-          <div class="svc-checks">
-            {SERVICES.map((s) => <label class="check"><input type="checkbox" name="m-svc" value={s.id} /> {s.short}</label>)}
+        <div class="mfoot">
+          <div class="preview" data-m-preview></div>
+          <div class="mfoot-r">
+            <p class="error" data-mform-err hidden></p>
+            <div class="pform-foot">
+              <button class="btn btn--light" type="button" data-mdlg-close>Batal</button>
+              <button class="btn" type="submit" data-msave>Simpan promo</button>
+            </div>
           </div>
-        </fieldset>
-
-        <div class="row2">
-          <div class="field">
-            <label for="m-start">Mulai <span class="opt">(opsional)</span></label>
-            <input class="input" id="m-start" type="datetime-local" />
-          </div>
-          <div class="field">
-            <label for="m-end">Berakhir <span class="opt">(opsional)</span></label>
-            <input class="input" id="m-end" type="datetime-local" />
-          </div>
-        </div>
-
-        <label class="check"><input type="checkbox" id="m-personal" /> Khusus 1 orang (kode hanya bisa dipakai sekali)</label>
-        <div class="field" data-personal-wrap hidden>
-          <label for="m-personal-for">Untuk siapa?</label>
-          <input class="input" id="m-personal-for" maxlength="80" placeholder="Contoh: Budi (klien lama)" />
-        </div>
-        <div class="field" data-quota-wrap>
-          <label for="m-quota">Kuota pemakaian <span class="opt">(kosong = tanpa batas)</span></label>
-          <input class="input" id="m-quota" type="number" inputmode="numeric" min="1" placeholder="Contoh: 10" />
-        </div>
-
-        <div class="field">
-          <label for="m-note">Catatan <span class="opt">(hanya untukmu)</span></label>
-          <input class="input" id="m-note" maxlength="200" />
-        </div>
-        <label class="check"><input type="checkbox" id="m-active" checked /> Aktif</label>
-
-        <p class="preview" data-m-preview></p>
-        <p class="error" data-mform-err hidden></p>
-        <div class="pform-foot">
-          <button class="btn btn--light" type="button" data-mdlg-close>Batal</button>
-          <button class="btn" type="submit" data-msave>Simpan</button>
         </div>
       </form>
     </dialog>
@@ -380,7 +469,8 @@ import { SERVICES } from '../config';
   .check { display: flex; gap: 0.6rem; align-items: center; font-weight: 600; }
   .check input { width: 20px; height: 20px; accent-color: var(--ink); }
   .pform-foot { display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem; }
-  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } .msec .row2 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 340px) { .msec .row2 { grid-template-columns: 1fr; } }
 
   .hint { font-size: 0.82rem; color: var(--muted); }
   .link-row .btn--light { border: 1.5px solid var(--line); }
@@ -395,14 +485,85 @@ import { SERVICES } from '../config';
   .svc-checks { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
   .svc-checks .check { font-weight: 500; }
   [data-max-wrap][hidden], [data-personal-wrap][hidden], [data-quota-wrap][hidden] { display: none; }
-  .preview { margin: 0; padding: 0.8rem 1rem; border-radius: 14px; background: #fff3d1; font-size: 0.9rem; }
+  .preview { margin: 0; padding: 0.85rem 1rem; border-radius: 14px; background: #fff3d1; font-size: 0.88rem; display: grid; gap: 0.25rem; }
   .preview:empty { display: none; }
+  .preview :global(strong) { font-family: var(--font-head); font-size: 0.98rem; }
+  .preview :global(ul) { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.15rem; }
+
+  .mdlg { width: min(100% - 24px, 1180px); }
+  .mform { gap: 1rem; padding-bottom: 0; padding-top: 1.25rem; }
+  .mform .pform-head h2 { font-size: 1.35rem; }
+  .mform .field { gap: 0.3rem; }
+  .mform .input, .mform .select { min-height: 44px; padding-block: 0.5rem; }
+  .mform .seg3 label { min-height: 38px; }
+  .mform .days label { min-height: 36px; }
+  .mform .hint { font-size: 0.78rem; }
+  .mform .pform-head { align-items: flex-start; gap: 1rem; }
+  .mform .sub { margin: 0.25rem 0 0; }
+  .mcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1.5rem; align-items: start; }
+  .mcol { display: grid; gap: 1rem; min-width: 0; }
+  .mform .msec { gap: 0.7rem; }
+  .mcol .msec:first-child { border-top: 0; padding-top: 0; }
+  .mfoot {
+    position: sticky; bottom: 0; z-index: 2; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;
+    margin-inline: -1.5rem; padding: 1rem 1.5rem 1.25rem; background: var(--panel); border-top: 1px solid var(--line);
+  }
+  .mfoot { padding-block: 0.85rem 1rem; }
+  .mfoot .preview { gap: 0.15rem; padding: 0.65rem 0.9rem; font-size: 0.85rem; max-height: 4.6rem; overflow: auto; }
+  .mfoot .preview :global(strong) { font-size: 0.95rem; }
+  .mfoot-r { display: grid; gap: 0.5rem; justify-items: end; }
+  .mfoot-r .error { margin: 0; text-align: right; max-width: 34ch; }
+  .mfoot .pform-foot { padding-top: 0; }
+  @media (max-width: 1100px) {
+    .mcols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mcol:nth-child(3) .msec:first-child { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
+  }
+  @media (max-width: 820px) {
+    .mcols { grid-template-columns: 1fr; }
+    .mcol + .mcol .msec:first-child { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
+    .mfoot { grid-template-columns: 1fr; }
+    .mfoot-r { justify-items: stretch; }
+    .mfoot-r .error { text-align: left; max-width: none; }
+    .mfoot .preview { max-height: 6.5rem; }
+  }
+  .msec { display: grid; gap: 0.85rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .msec h3 { margin: 0; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-family: var(--font-body); }
+  .msec .row2 { grid-template-columns: 1fr 1fr; }
+  .span2 { grid-column: 1 / -1; }
+  [data-hours-wrap][hidden], [data-ppl-wrap][hidden], [data-mode-wrap][hidden] { display: none; }
+  .quick { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.15rem; }
+  .quick button {
+    border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.25rem 0.7rem; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; min-height: 32px; color: var(--ink-2);
+  }
+  .quick button:hover { border-color: var(--ink); color: var(--ink); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--panel-2); }
+  .days label { position: relative; display: grid; place-items: center; min-height: 40px; border-radius: 10px; font-weight: 650; font-size: 0.82rem; cursor: pointer; }
+  .days input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+  .days label:has(input:checked) { background: var(--ink); color: #fff; }
+  .days label:has(input:focus-visible) { outline: 3px solid var(--brand-deep); outline-offset: 2px; }
+  :global(.i-cond) { font-size: 0.86rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  :global(.i-cond span) { border: 1px solid var(--line); border-radius: 99px; padding: 0.1rem 0.6rem; background: #fff; }
+  :global(.item.is-editing) { outline: 2px solid var(--ink); outline-offset: 2px; }
   :global(.promo-code) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; }
   :global(.uses) { display: grid; gap: 0.35rem; padding: 0.75rem; border-radius: 14px; background: var(--panel-2); font-size: 0.88rem; }
   :global(.uses .u) { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
   :global(.uses .u.cancel) { color: var(--muted); text-decoration: line-through; }
   :global(.uses button) { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.2rem 0.65rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: none; }
 
+  .or-search { max-width: 240px; min-height: 40px; padding-block: 0.4rem; font-size: 0.92rem; }
+  .or-help { margin: 0 0 0.75rem; }
+  :global(.badge.run) { background: #e3ecff; color: #2747a8; }
+  :global(.o-code) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 800; font-size: 1.02rem; letter-spacing: 0.02em; }
+  :global(.o-extra) { display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: 0.82rem; }
+  :global(.o-extra span) { border: 1px solid var(--line); border-radius: 99px; padding: 0.1rem 0.6rem; }
+  :global(.o-edit) { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end; padding: 0.75rem; border-radius: 14px; background: var(--panel-2); }
+  :global(.o-edit label) { display: grid; gap: 0.25rem; font-size: 0.8rem; font-weight: 650; color: var(--muted); }
+  :global(.o-edit .input), :global(.o-edit .select) { min-height: 40px; padding-block: 0.35rem; font-size: 0.92rem; background-color: #fff; }
+  :global(.o-edit .note) { grid-column: 1 / -1; }
+  :global(.o-edit button) { min-height: 40px; }
+  :global(.o-flag) { font-size: 0.82rem; font-weight: 650; color: var(--ok); }
+  @media (max-width: 560px) { :global(.o-edit) { grid-template-columns: 1fr 1fr; } :global(.o-edit button) { grid-column: 1 / -1; } }
   .fb-filter { display: flex; gap: 0.3rem; flex-wrap: wrap; }
   .fb-filter button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.3rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; min-height: 34px; }
   .fb-filter button[aria-pressed='true'] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -434,9 +595,10 @@ import { SERVICES } from '../config';
 </style>
 
 <script>
+  import { orders as orderApi, type AdminOrder } from '../lib/admin';
   import { api, projects as projApi, promos as promoApi, uploadImage, getSession, login, logout, AuthError, type Code, type AdminReview, type AdminProject, type AdminPromo, type PromoUse } from '../lib/admin';
   import { SITE, SERVICES } from '../config';
-  import { promoLabel } from '../lib/supabase';
+  import { promoLabel, daysLabel, timeLabel, rupiah } from '../lib/supabase';
   import { feedback as fbApi, type Feedback } from '../lib/admin';
 
   const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
@@ -481,6 +643,9 @@ import { SERVICES } from '../config';
   const openUses = new Set<string>();
   let fbList: Feedback[] = [];
   let fbFilter = '';
+  let orderList: AdminOrder[] = [];
+  let orFilter = '', orQuery = '';
+  const isPending = (r: AdminReview) => !r.is_visible && !r.approved_at;
 
   const el = (tag: string, cls?: string, text?: string) => {
     const n = document.createElement(tag);
@@ -500,8 +665,9 @@ import { SERVICES } from '../config';
     const avg = vis.length ? vis.reduce((a, r) => a + r.rating, 0) / vis.length : 0;
     $('[data-s-avg]').textContent = vis.length ? `${avg.toFixed(1).replace('.', ',')} ★` : '0';
     $('[data-s-visible]').textContent = String(vis.length);
-    $('[data-s-hidden]').textContent = String(reviews.length - vis.length);
-    $('[data-s-open]').textContent = String(codes.filter((c) => !c.used_at).length);
+    $('[data-s-hidden]').textContent = String(reviews.filter(isPending).length);
+    $('[data-s-open]').textContent = String(orderList.filter((o) => o.status === 'menunggu' || o.status === 'dikerjakan').length);
+    $('[data-c-orders]').textContent = String(orderList.filter((o) => o.status === 'menunggu').length || orderList.length);
     $('[data-c-reviews]').textContent = String(reviews.length);
     $('[data-c-codes]').textContent = String(codes.length);
     $('[data-c-projects]').textContent = String(projs.length);
@@ -513,26 +679,32 @@ import { SERVICES } from '../config';
     const box = $<HTMLElement>('[data-reviews]');
     box.innerHTML = '';
     $('[data-reviews-empty]').toggleAttribute('hidden', reviews.length > 0);
-    for (const r of reviews) {
-      const it = el('article', `item${r.is_visible ? '' : ' is-hidden'}`);
+    const sorted = [...reviews].sort((a, b) => Number(isPending(b)) - Number(isPending(a)));
+    for (const r of sorted) {
+      const pending = isPending(r);
+      const it = el('article', `item${r.is_visible || pending ? '' : ' is-hidden'}`);
       const head = el('div', 'i-head');
       const stars = el('span', '', '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating));
       stars.style.color = 'var(--star)';
       stars.style.letterSpacing = '2px';
       stars.setAttribute('aria-label', `${r.rating} dari 5 bintang`);
-      head.append(stars, el('span', `badge ${r.is_visible ? 'ok' : 'off'}`, r.is_visible ? 'Tampil' : 'Disembunyikan'));
+      head.append(stars, el('span', `badge ${pending ? 'wait' : r.is_visible ? 'ok' : 'off'}`, pending ? 'Menunggu dicek' : r.is_visible ? 'Tampil' : 'Disembunyikan'));
       const meta = el('div', 'i-meta');
-      meta.append(el('strong', '', r.name), el('span', '', r.service), el('span', '', fmtDate(r.created_at)), el('span', 'code-txt', r.code));
+      meta.append(el('strong', '', r.name), el('span', '', r.service), el('span', '', fmtDate(r.created_at)));
+      if (r.source === 'struk') meta.append(el('span', 'o-flag', 'Pembeli terverifikasi'), el('span', 'code-txt', r.order_code ?? 'struk dihapus'));
+      else meta.append(el('span', 'code-txt', r.code ?? ''));
+      const setVis = (v: boolean) => async () => {
+        try {
+          await api.setVisible(r.id, v);
+          r.is_visible = v; r.approved_at = new Date().toISOString();
+          renderReviews(); renderStats();
+          toast(v ? 'Ulasan ditampilkan.' : 'Ulasan disembunyikan.');
+        } catch (e) { handle(e); }
+      };
       const actions = el('div', 'i-actions');
+      if (pending) actions.append(btn('Setujui & tampilkan', setVis(true)), btn('Tolak (sembunyikan)', setVis(false)));
+      else actions.append(btn(r.is_visible ? 'Sembunyikan' : 'Tampilkan', setVis(!r.is_visible)));
       actions.append(
-        btn(r.is_visible ? 'Sembunyikan' : 'Tampilkan', async () => {
-          try {
-            await api.setVisible(r.id, !r.is_visible);
-            r.is_visible = !r.is_visible;
-            renderReviews(); renderStats();
-            toast(r.is_visible ? 'Ulasan ditampilkan.' : 'Ulasan disembunyikan.');
-          } catch (e) { handle(e); }
-        }),
         btn('Hapus', async () => {
           if (!confirm(`Hapus ulasan dari ${r.name}? Tindakan ini tidak bisa dibatalkan.`)) return;
           try {
@@ -736,7 +908,22 @@ import { SERVICES } from '../config';
     if (p.starts_at && now < Date.parse(p.starts_at)) return ['Terjadwal', 'wait'];
     if (p.ends_at && now > Date.parse(p.ends_at)) return ['Berakhir', 'off'];
     if (p.quota !== null && usedCount(p.code) >= p.quota) return [p.personal_for ? 'Sudah dipakai' : 'Kuota habis', 'off'];
+    if (!inSchedule(p)) return ['Di luar jadwal', 'wait'];
     return ['Aktif', 'ok'];
+  }
+  /** Cek hari & jam sekarang (WIB) terhadap jadwal promo. */
+  function inSchedule(p: AdminPromo) {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date()).map((x) => [x.type, x.value]),
+    );
+    const dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(parts.weekday) + 1;
+    if (p.days?.length && !p.days.includes(dow)) return false;
+    if (p.time_start && p.time_end) {
+      const t = `${parts.hour}:${parts.minute}`, a = p.time_start.slice(0, 5), b = p.time_end.slice(0, 5);
+      return a < b ? t >= a && t < b : t >= a || t < b;
+    }
+    return true;
   }
 
   function renderPromos() {
@@ -745,18 +932,25 @@ import { SERVICES } from '../config';
     $('[data-promos-empty]').toggleAttribute('hidden', promoList.length > 0);
     for (const p of promoList) {
       const [label, cls] = promoState(p);
-      const it = el('article', `item${cls === 'off' ? ' is-hidden' : ''}`);
+      const it = el('article', `item${cls === 'off' ? ' is-hidden' : ''}${editingPromo?.code === p.code ? ' is-editing' : ''}`);
       const head = el('div', 'i-head');
       const left = el('div');
       left.append(el('div', 'promo-code', p.code));
       left.append(el('div', '', `${promoLabel(p)}${p.title ? ' · ' + p.title : ''}`));
       head.append(left, el('span', `badge ${cls}`, label));
       const meta = el('div', 'i-meta');
-      meta.append(el('span', '', p.services.length ? `Layanan: ${p.services.map(svcShort).join(', ')}` : 'Semua layanan'));
-      if (p.starts_at || p.ends_at) meta.append(el('span', '', `${p.starts_at ? fmtDT(p.starts_at) : '…'} → ${p.ends_at ? fmtDT(p.ends_at) : '…'}`));
       meta.append(el('strong', '', `Dipakai ${usedCount(p.code)}${p.quota !== null ? ' / ' + p.quota : ''}`));
-      if (p.personal_for) meta.append(el('span', '', `Khusus: ${p.personal_for}`));
+      if (p.starts_at || p.ends_at) meta.append(el('span', '', `${p.starts_at ? fmtDT(p.starts_at) : 'Sekarang'} sampai ${p.ends_at ? fmtDT(p.ends_at) : 'tanpa batas'}`));
       if (p.note) meta.append(el('span', '', p.note));
+      const conds = [
+        p.services.length ? p.services.map(svcShort).join(', ') : 'Semua layanan',
+        daysLabel(p.days), timeLabel(p.time_start, p.time_end),
+        p.class_mode ? `Kelas ${p.class_mode.toLowerCase()}` : '',
+        p.per_person_limit ? `Maks. ${p.per_person_limit}x per orang` : '',
+        p.personal_for ? `Khusus ${p.personal_for}` : '',
+      ].filter(Boolean);
+      const cond = el('div', 'i-cond');
+      conds.forEach((c) => cond.append(el('span', '', c)));
       const actions = el('div', 'i-actions');
       actions.append(
         btn('Salin kode', async () => {
@@ -764,6 +958,13 @@ import { SERVICES } from '../config';
         }),
         btn('Salin link', () => copy(`${SITE.url}/pesan?promo=${encodeURIComponent(p.code)}${p.services.length === 1 ? '&layanan=' + p.services[0] : ''}`)),
         btn('Edit', () => openPromo(p)),
+        btn('Duplikat', () => {
+          openPromo({ ...p, code: '', created_at: '' } as AdminPromo);
+          editingPromo = null;
+          $('[data-mdlg-title]').textContent = `Salin dari ${p.code}`;
+          m.code.readOnly = false; m.code.focus();
+          renderPromos();
+        }),
         btn(p.is_active ? 'Nonaktifkan' : 'Aktifkan', async () => {
           try {
             await promoApi.update(p.code, { is_active: !p.is_active });
@@ -784,14 +985,15 @@ import { SERVICES } from '../config';
           } catch (e) { handle(e); }
         }, 'danger'),
       );
-      it.append(head, meta, actions);
+      it.append(head, cond, meta, actions);
       if (openUses.has(p.code)) {
         const list = el('div', 'uses');
         const mine = promoUses.filter((u) => u.code === p.code);
         if (!mine.length) list.append(el('span', 'muted', 'Belum ada yang memakai kode ini.'));
         for (const u of mine) {
           const row = el('div', `u${u.status === 'cancelled' ? ' cancel' : ''}`);
-          row.append(el('span', '', `${u.name || 'Tanpa nama'} · ${u.service ? svcShort(u.service) : 'Tanpa layanan'} · ${fmtDT(u.created_at)}`));
+          const who = [u.name || 'Tanpa nama', u.service ? svcShort(u.service) : 'Tanpa layanan', u.class_mode, u.phone ? `+${u.phone}` : '', fmtDT(u.created_at)];
+          row.append(el('span', '', who.filter(Boolean).join(' · ')));
           row.append(btn(u.status === 'used' ? 'Batalkan' : 'Pulihkan', async () => {
             const next = u.status === 'used' ? 'cancelled' : 'used';
             try { await promoApi.setUse(u.id, next); u.status = next; renderPromos(); toast(next === 'cancelled' ? 'Pemakaian dibatalkan, kuota kembali.' : 'Pemakaian dipulihkan.'); }
@@ -805,23 +1007,28 @@ import { SERVICES } from '../config';
     }
   }
 
-  const mdlg = $<HTMLDialogElement>('[data-mdlg]');
   const mf = $<HTMLFormElement>('#promo-form');
   const m = {
     code: $<HTMLInputElement>('#m-code'), title: $<HTMLInputElement>('#m-title'), value: $<HTMLInputElement>('#m-value'),
     max: $<HTMLInputElement>('#m-max'), start: $<HTMLInputElement>('#m-start'), end: $<HTMLInputElement>('#m-end'),
     personal: $<HTMLInputElement>('#m-personal'), personalFor: $<HTMLInputElement>('#m-personal-for'),
-    quota: $<HTMLInputElement>('#m-quota'), note: $<HTMLInputElement>('#m-note'), active: $<HTMLInputElement>('#m-active'),
+    quota: $<HTMLInputElement>('#m-quota'), ppl: $<HTMLInputElement>('#m-ppl'), note: $<HTMLInputElement>('#m-note'),
+    active: $<HTMLInputElement>('#m-active'), hours: $<HTMLInputElement>('#m-hours'),
+    tstart: $<HTMLInputElement>('#m-tstart'), tend: $<HTMLInputElement>('#m-tend'),
   };
   const merr = $<HTMLElement>('[data-mform-err]');
   let editingPromo: AdminPromo | null = null;
   const mType = () => (mf.querySelector<HTMLInputElement>('input[name="m-type"]:checked')!.value as AdminPromo['discount_type']);
+  const mMode = () => (mf.querySelector<HTMLInputElement>('input[name="m-mode"]:checked')?.value || null) as AdminPromo['class_mode'];
+  const mDays = () => [...mf.querySelectorAll<HTMLInputElement>('input[name="m-day"]:checked')].map((x) => Number(x.value));
+  const mSvcs = () => [...mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]:checked')].map((x) => x.value);
   const toLocal = (iso: string | null) => {
     if (!iso) return '';
     const d = new Date(iso);
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   };
   const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
+  const localStr = (d: Date) => toLocal(d.toISOString());
 
   function syncPromoForm() {
     const t = mType();
@@ -831,43 +1038,96 @@ import { SERVICES } from '../config';
     $<HTMLElement>('[data-max-wrap]').hidden = t !== 'percent';
     $<HTMLElement>('[data-personal-wrap]').hidden = !m.personal.checked;
     $<HTMLElement>('[data-quota-wrap]').hidden = m.personal.checked;
-    const v = Number(m.value.value);
+    $<HTMLElement>('[data-ppl-wrap]').hidden = m.personal.checked;
+    $<HTMLElement>('[data-hours-wrap]').hidden = !m.hours.checked;
+    const svcs = mSvcs();
+    $<HTMLElement>('[data-mode-wrap]').hidden = svcs.length > 0 && !svcs.includes('kelas');
+
     const prev = $<HTMLElement>('[data-m-preview]');
-    if (v > 0) {
-      const rule = { discount_type: t, value: v, max_discount: t === 'percent' && Number(m.max.value) > 0 ? Number(m.max.value) : null };
-      const svcs = [...mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]:checked')].map((x) => svcShort(x.value));
-      prev.textContent = `Pratinjau: ${promoLabel(rule)} · ${svcs.length ? svcs.join(', ') : 'semua layanan'}${m.personal.checked ? ' · khusus 1 orang' : m.quota.value ? ` · kuota ${m.quota.value}` : ''}`;
-    } else prev.textContent = '';
+    const v = Number(m.value.value);
+    if (!(v > 0)) { prev.innerHTML = ''; return; }
+    const rule = { discount_type: t, value: v, max_discount: t === 'percent' && Number(m.max.value) > 0 ? Number(m.max.value) : null };
+    const lines: string[] = [svcs.length ? `Layanan: ${svcs.map(svcShort).join(', ')}` : 'Semua layanan'];
+    const st = m.start.value, en = m.end.value;
+    if (st || en) lines.push(`${st ? fmtDT(fromLocal(st)!) : 'Mulai sekarang'} sampai ${en ? fmtDT(fromLocal(en)!) : 'tanpa batas'}`);
+    const dl = daysLabel(mDays());
+    if (dl) lines.push(`Hanya hari ${dl}`);
+    if (m.hours.checked && m.tstart.value && m.tend.value) lines.push(`Jam ${timeLabel(m.tstart.value, m.tend.value)}`);
+    if (m.personal.checked) lines.push(`Khusus 1 orang${m.personalFor.value.trim() ? ': ' + m.personalFor.value.trim() : ''}`);
+    else {
+      lines.push(m.quota.value ? `Kuota ${m.quota.value} pemakaian` : 'Kuota tanpa batas');
+      if (m.ppl.value) lines.push(`Maks. ${m.ppl.value}x per nomor WA`);
+    }
+    const mode = mMode();
+    if (mode && !$<HTMLElement>('[data-mode-wrap]').hidden) lines.push(`Kelas coding hanya ${mode.toLowerCase()}`);
+    if (!m.active.checked) lines.push('Belum aktif');
+    prev.innerHTML = '';
+    prev.append(el('strong', '', `${m.code.value || 'KODE'} · ${promoLabel(rule)}`), el('span', '', lines.join(' · ')));
   }
   mf.addEventListener('input', syncPromoForm);
   mf.addEventListener('change', syncPromoForm);
+  syncPromoForm();
+
+  // isi cepat
+  mf.querySelectorAll<HTMLButtonElement>('[data-end]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.end!;
+    if (!k) m.end.value = '';
+    else {
+      const base = m.start.value ? new Date(m.start.value) : new Date();
+      const d = k === 'month' ? new Date(base.getFullYear(), base.getMonth() + 1, 0, 23, 59) : new Date(base.getTime() + Number(k) * 864e5);
+      if (k !== 'month') d.setHours(23, 59, 0, 0);
+      m.end.value = localStr(d);
+    }
+    syncPromoForm();
+  }));
+  mf.querySelectorAll<HTMLButtonElement>('[data-days]').forEach((b) => b.addEventListener('click', () => {
+    const on = new Set(b.dataset.days!.split(',').filter(Boolean));
+    mf.querySelectorAll<HTMLInputElement>('input[name="m-day"]').forEach((c) => (c.checked = on.has(c.value)));
+    syncPromoForm();
+  }));
+  mf.querySelectorAll<HTMLButtonElement>('[data-quota]').forEach((b) => b.addEventListener('click', () => {
+    m.quota.value = b.dataset.quota!; syncPromoForm();
+  }));
+
+  const mdlg = $<HTMLDialogElement>('[data-mdlg]');
+  mdlg.addEventListener('close', () => { editingPromo = null; renderPromos(); });
 
   function openPromo(p: AdminPromo | null) {
     editingPromo = p;
     merr.hidden = true;
     $('[data-mdlg-title]').textContent = p ? `Edit promo ${p.code}` : 'Buat promo';
     m.code.value = p?.code ?? '';
+    m.code.readOnly = !!p;
     m.title.value = p?.title ?? '';
     mf.querySelector<HTMLInputElement>(`input[name="m-type"][value="${p?.discount_type ?? 'percent'}"]`)!.checked = true;
     m.value.value = p ? String(p.value) : '';
     m.max.value = p?.max_discount ? String(p.max_discount) : '';
     mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]').forEach((c) => (c.checked = !!p?.services.includes(c.value)));
+    mf.querySelector<HTMLInputElement>(`input[name="m-mode"][value="${p?.class_mode ?? ''}"]`)!.checked = true;
     m.start.value = toLocal(p?.starts_at ?? null);
     m.end.value = toLocal(p?.ends_at ?? null);
+    const days = new Set((p?.days ?? []).map(String));
+    mf.querySelectorAll<HTMLInputElement>('input[name="m-day"]').forEach((c) => (c.checked = days.has(c.value)));
+    m.hours.checked = !!p?.time_start;
+    m.tstart.value = p?.time_start?.slice(0, 5) ?? '19:00';
+    m.tend.value = p?.time_end?.slice(0, 5) ?? '22:00';
     m.personal.checked = !!p?.personal_for;
     m.personalFor.value = p?.personal_for ?? '';
     m.quota.value = p?.quota && !p.personal_for ? String(p.quota) : '';
+    m.ppl.value = p?.per_person_limit ? String(p.per_person_limit) : '';
     m.note.value = p?.note ?? '';
     m.active.checked = p?.is_active ?? true;
     syncPromoForm();
-    mdlg.showModal();
-    m.code.focus();
+    if (!mdlg.open) mdlg.showModal();
+    mf.scrollTop = 0; mdlg.scrollTop = 0;
+    (p ? m.title : m.code).focus();
   }
   $('[data-add-promo]').addEventListener('click', () => openPromo(null));
   document.querySelectorAll('[data-mdlg-close]').forEach((b) => b.addEventListener('click', () => mdlg.close()));
   $('[data-rand-code]').addEventListener('click', () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     m.code.value = 'PAS' + Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => chars[b % chars.length]).join('');
+    syncPromoForm();
   });
   m.code.addEventListener('input', () => { m.code.value = m.code.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); });
 
@@ -879,38 +1139,159 @@ import { SERVICES } from '../config';
     const value = Number(m.value.value);
     const max = Number(m.max.value) || null;
     const quota = m.personal.checked ? 1 : Number(m.quota.value) || null;
+    const ppl = m.personal.checked ? null : Number(m.ppl.value) || null;
     const starts = fromLocal(m.start.value), ends = fromLocal(m.end.value);
+    let days = mDays();
+    if (days.length === 7) days = [];
+    const hours = m.hours.checked;
+    const svcs = mSvcs();
+    const mode = svcs.length && !svcs.includes('kelas') ? null : mMode();
     const problem =
       !/^[A-Z0-9-]{3,24}$/.test(code) ? 'Kode harus 3 sampai 24 karakter (huruf besar, angka, minus).' :
       !(value > 0) ? 'Isi nilai potongan.' :
       t === 'percent' && value > 100 ? 'Persen maksimal 100.' :
       starts && ends && Date.parse(ends) <= Date.parse(starts) ? 'Tanggal berakhir harus setelah tanggal mulai.' :
+      hours && (!m.tstart.value || !m.tend.value) ? 'Isi jam mulai dan jam selesai.' :
+      hours && m.tstart.value === m.tend.value ? 'Jam mulai dan jam selesai tidak boleh sama.' :
       m.personal.checked && !m.personalFor.value.trim() ? 'Isi untuk siapa kode personal ini.' :
+      (Number(m.quota.value) < 0 || Number(m.ppl.value) < 0) ? 'Kuota tidak boleh negatif.' :
+      quota && ppl && ppl > quota ? 'Batas per orang tidak boleh lebih besar dari kuota total.' :
       !editingPromo && promoList.some((x) => x.code === code) ? 'Kode ini sudah dipakai promo lain.' : '';
-    if (problem) { merr.textContent = problem; merr.hidden = false; return; }
+    if (problem) { merr.textContent = problem; merr.hidden = false; merr.scrollIntoView({ block: 'nearest' }); return; }
     const data = {
       code, title: m.title.value.trim() || null, discount_type: t, value: Math.round(value),
       max_discount: t === 'percent' ? max : null,
-      services: [...mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]:checked')].map((x) => x.value),
-      starts_at: starts, ends_at: ends, quota,
+      services: svcs, class_mode: mode, days,
+      time_start: hours ? m.tstart.value : null, time_end: hours ? m.tend.value : null,
+      starts_at: starts, ends_at: ends, quota, per_person_limit: ppl,
       personal_for: m.personal.checked ? m.personalFor.value.trim() : null,
       note: m.note.value.trim() || null, is_active: m.active.checked,
     };
     const save = $<HTMLButtonElement>('[data-msave]');
     save.disabled = true; save.textContent = 'Menyimpan…';
+    const wasEdit = !!editingPromo;
     try {
       if (editingPromo) await promoApi.update(editingPromo.code, data); else await promoApi.create(data);
       [promoList, promoUses] = await Promise.all([promoApi.list(), promoApi.uses()]);
-      renderPromos(); renderStats();
+      renderStats();
       mdlg.close();
-      toast(editingPromo ? 'Promo diperbarui.' : `Promo ${code} dibuat.`);
+      toast(wasEdit ? 'Promo diperbarui.' : `Promo ${code} dibuat.`);
     } catch (err) {
       if (err instanceof AuthError) { mdlg.close(); handle(err); return; }
       const msg = err instanceof Error ? err.message : '';
       merr.textContent = /duplicate|unique/i.test(msg) ? 'Kode ini sudah dipakai promo lain.' : msg || 'Gagal menyimpan.';
       merr.hidden = false;
-    } finally { save.disabled = false; save.textContent = 'Simpan'; }
+    } finally { save.disabled = false; save.textContent = 'Simpan promo'; }
   });
+
+  // ---------- pesanan (struk) ----------
+  const OR_LABEL: Record<AdminOrder['status'], [string, string]> = {
+    menunggu: ['Menunggu', 'wait'], dikerjakan: ['Dikerjakan', 'run'], selesai: ['Selesai', 'ok'], batal: ['Batal', 'off'],
+  };
+  const svcTitle = (id: string) => SERVICES.find((s) => s.id === id)?.title ?? id;
+  const showPhone = (p: string) => ('0' + p.replace(/^62/, '')).replace(/^(\d{4})(\d{4})(\d+)$/, '$1-$2-$3');
+  const fmtDT2 = (iso: string) => new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  function renderOrders() {
+    const box = $<HTMLElement>('[data-orders]');
+    box.innerHTML = '';
+    const q = orQuery.trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, '').replace(/^0/, '');
+    const list = orderList.filter((o) =>
+      (!orFilter || o.status === orFilter) &&
+      (!q || o.code.toLowerCase().includes(q) || o.name.toLowerCase().includes(q) || (qDigits.length >= 3 && o.phone.includes(qDigits))));
+    $('[data-orders-empty]').toggleAttribute('hidden', list.length > 0);
+    $('[data-orders-empty]').textContent = orderList.length ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan.';
+    for (const o of list) {
+      const [label, cls] = OR_LABEL[o.status];
+      const it = el('article', `item${o.status === 'batal' ? ' is-hidden' : ''}`);
+      const head = el('div', 'i-head');
+      const left = el('div');
+      left.append(el('div', 'o-code', o.code), el('div', '', `${o.name} · ${svcTitle(o.service)}`));
+      head.append(left, el('span', `badge ${cls}`, label));
+      const meta = el('div', 'i-meta');
+      meta.append(el('span', '', fmtDT2(o.created_at)));
+      const wa = el('a', '', showPhone(o.phone)) as HTMLAnchorElement;
+      wa.href = `https://wa.me/${o.phone}?text=${encodeURIComponent(`Halo Kak ${o.name}, soal pesanan PAS dengan kode struk ${o.code}:`)}`;
+      wa.target = '_blank'; wa.rel = 'noopener';
+      meta.append(wa);
+      if (o.est_price !== null) meta.append(el('span', '', `Perkiraan ${rupiah(o.est_price)}`));
+      if (o.promo_code) meta.append(el('span', 'code-txt', `Promo ${o.promo_code}`));
+      if (o.final_price !== null) meta.append(el('strong', '', `Final ${rupiah(o.final_price)}`));
+      if (o.reviewed_at) meta.append(el('span', 'o-flag', 'Sudah diulas'));
+      const extra = el('div', 'o-extra');
+      const e = o.extra ?? {};
+      const ex: string[] = [];
+      if (e.course) ex.push(e.course);
+      if (e.lang) ex.push(e.lang);
+      if (e.mode) ex.push(e.mode);
+      if (e.deadline) ex.push(`${o.service === 'kelas' ? 'Mulai' : 'Deadline'} ${new Date(e.deadline + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`);
+      if (e.budget) ex.push(`Budget ${e.budget}`);
+      ex.forEach((x) => extra.append(el('span', '', x)));
+
+      const edit = el('form', 'o-edit') as HTMLFormElement;
+      const stLab = el('label', '', 'Status');
+      const sel = el('select', 'select') as HTMLSelectElement;
+      (Object.keys(OR_LABEL) as AdminOrder['status'][]).forEach((k) => {
+        const op = el('option', '', OR_LABEL[k][0]) as HTMLOptionElement;
+        op.value = k; op.selected = k === o.status; sel.append(op);
+      });
+      stLab.append(sel);
+      const prLab = el('label', '', 'Harga final (Rp)');
+      const price = el('input', 'input') as HTMLInputElement;
+      price.type = 'number'; price.inputMode = 'numeric'; price.min = '0'; price.placeholder = 'Contoh: 150000';
+      price.value = o.final_price !== null ? String(o.final_price) : '';
+      prLab.append(price);
+      const noteLab = el('label', 'note', 'Catatan (hanya untukmu)');
+      const note = el('input', 'input') as HTMLInputElement;
+      note.maxLength = 200; note.value = o.admin_note ?? '';
+      noteLab.append(note);
+      const save = el('button', 'btn btn--sm', 'Simpan') as HTMLButtonElement;
+      save.type = 'submit';
+      edit.append(stLab, prLab, save, noteLab);
+      edit.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const fp = price.value.trim() === '' ? null : Math.round(Number(price.value));
+        if (fp !== null && (!Number.isFinite(fp) || fp < 0)) { toast('Harga final tidak valid.', true); price.focus(); return; }
+        const next = sel.value as AdminOrder['status'];
+        if (next === 'selesai' && o.status !== 'selesai' && fp === null && !confirm('Tandai selesai tanpa harga final?')) return;
+        save.disabled = true; save.textContent = 'Menyimpan…';
+        try {
+          const [row] = await orderApi.update(o.code, { status: next, final_price: fp, admin_note: note.value.trim() || null });
+          if (row) Object.assign(o, row);
+          renderOrders(); renderStats();
+          toast(next === 'selesai' && o.reviewed_at === null ? 'Disimpan. Pembeli sekarang bisa menulis ulasan.' : 'Pesanan disimpan.');
+        } catch (err) { handle(err); save.disabled = false; save.textContent = 'Simpan'; }
+      });
+
+      const actions = el('div', 'i-actions');
+      actions.append(
+        btn('Salin link struk', () => copy(`${SITE.url}/struk?kode=${encodeURIComponent(o.code)}`)),
+        btn('Hapus', async () => {
+          const typed = prompt(`Hapus pesanan ${o.code} permanen? Ketik kodenya untuk konfirmasi.`);
+          if (typed === null) return;
+          if (typed.trim().toUpperCase() !== o.code) { toast('Kode tidak cocok, pesanan tidak dihapus.', true); return; }
+          try {
+            await orderApi.remove(o.code);
+            orderList = orderList.filter((x) => x.code !== o.code);
+            renderOrders(); renderStats(); toast('Pesanan dihapus.');
+          } catch (err) { handle(err); }
+        }, 'danger'),
+      );
+      it.append(head, meta);
+      if (ex.length) it.append(extra);
+      it.append(el('p', 'i-txt', o.detail), edit, actions);
+      box.append(it);
+    }
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-or-filter] button').forEach((b) =>
+    b.addEventListener('click', () => {
+      orFilter = b.dataset.st ?? '';
+      document.querySelectorAll('[data-or-filter] button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderOrders();
+    }),
+  );
+  $<HTMLInputElement>('[data-or-search]').addEventListener('input', (e) => { orQuery = (e.target as HTMLInputElement).value; renderOrders(); });
 
   // ---------- saran ----------
   const easeTxt = ['Sulit', 'Agak sulit', 'Biasa', 'Mudah', 'Sangat mudah'];
@@ -957,8 +1338,10 @@ import { SERVICES } from '../config';
   );
 
   async function loadData() {
-    [codes, reviews, projs, promoList, promoUses, fbList] = await Promise.all([api.listCodes(), api.listReviews(), projApi.list(), promoApi.list(), promoApi.uses(), fbApi.list()]);
-    renderStats(); renderReviews(); renderCodes(); renderProjects(); renderPromos(); renderFeedback();
+    [codes, reviews, projs, promoList, promoUses, fbList, orderList] = await Promise.all([
+      api.listCodes(), api.listReviews(), projApi.list(), promoApi.list(), promoApi.uses(), fbApi.list(), orderApi.list(),
+    ]);
+    renderStats(); renderOrders(); renderReviews(); renderCodes(); renderProjects(); renderPromos(); renderFeedback();
   }
 
   async function enter() {

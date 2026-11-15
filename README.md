@@ -13,11 +13,13 @@ Urutan menu (juga dipakai untuk arah animasi dan tombol Sebelumnya/Berikutnya):
 5. **Testimoni** (`/testimoni`): rating, sebaran bintang, dan filter per layanan.
 6. **FAQ** (`/faq`): pertanyaan per kategori.
 7. **Saran** (`/saran`): pengunjung mengirim saran, boleh tanpa nama. Saran hanya bisa dibaca admin.
-8. **Pesan** (`/pesan`): form yang diteruskan ke WhatsApp, lengkap dengan kode promo.
+8. **Pesan** (`/pesan`): form yang membuat **struk pesanan**, lalu diteruskan ke WhatsApp, lengkap dengan kode promo.
 
 Halaman lain:
-- **Tulis ulasan** (`/ulasan`)
-- **Admin** (`/admin`): Ulasan, Kode, Karya, Promo, dan Saran.
+- **Pesananku** (`/pesananku`): riwayat struk di perangkat pembeli + cari struk pakai kode dan nomor WA. Juga ada di tombol struk di header dan menu HP.
+- **Struk** (`/struk?kode=…`): status pesanan, harga final, unduh struk sebagai gambar, tombol tanya admin, dan tombol tulis ulasan.
+- **Tulis ulasan** (`/ulasan?struk=…` dari struk, atau `/ulasan?kode=…` dari kode manual)
+- **Admin** (`/admin`): Pesanan, Ulasan, Kode, Karya, Promo, dan Saran.
 
 Navigasi:
 - **Desktop:** tab pill berikon. Penanda halaman aktif meluncur halus saat berpindah halaman.
@@ -46,14 +48,21 @@ Data disimpan di project Supabase **portfolio**, di tabel berawalan `pas_`, terp
 Kunci yang dipakai website (`.env`) adalah kunci *publishable* yang memang aman dipakai di browser.
 Keamanan dijaga oleh RLS dan fungsi database:
 
-- Publik hanya bisa **membaca** ulasan yang tampil. Mereka tidak bisa membaca kode pesanan.
-- Ulasan hanya bisa dikirim dengan **kode yang valid dan belum dipakai**. Satu kode berlaku untuk satu ulasan.
+- Publik hanya bisa **membaca** ulasan yang tampil. Mereka tidak bisa membaca kode, pesanan, atau nomor WA.
+- Ulasan hanya bisa dikirim oleh pembeli, lewat dua jalan:
+  1. **Struk pesanan** (mirip Labkom): form Pesan membuat struk `PAS-YYMMDD-XXXXXX`. Struk dibuka dengan kode **dan** nomor WA yang sama. Tombol ulasan baru terbuka setelah kamu menandai pesanan **Selesai** di admin. 1 struk = 1 ulasan, dan ulasannya diberi tanda **Pembeli terverifikasi**.
+  2. **Kode ulasan manual** dari admin, untuk klien yang pesan langsung lewat chat. Satu kode berlaku untuk satu ulasan.
+- **Semua ulasan baru ditahan** dan baru tampil setelah kamu setujui di tab Ulasan.
+- Form Pesan dibatasi **5 struk per nomor WA per jam** (dan 40 struk per 10 menit untuk semua orang) supaya tidak dibanjiri pesanan palsu. Kalau struk gagal dibuat (tanpa promo), pesan tetap diteruskan ke WhatsApp.
+- Kirim ulang form yang sama tidak membuat struk ganda.
 
 ### Halaman admin: `petrajm.tech/admin`
 Login dengan **akun admin portofolio** (email + password yang sama). Akun lain akan ditolak.
 Hak akses diperiksa di database (`is_admin()` + RLS), bukan hanya di browser.
 
 Di dashboard kamu bisa:
+- **Pesanan:** lihat semua struk, cari kode/nama/nomor, filter status, ubah status (Menunggu, Dikerjakan, Selesai, Batal), isi **harga final** dan catatan pribadi, chat pembeli, salin link struk, atau hapus (ketik kodenya untuk konfirmasi). Perubahan langsung terlihat di struk pembeli.
+- **Ulasan:** ulasan baru muncul paling atas dengan status *Menunggu dicek*. Tekan **Setujui & tampilkan** atau **Tolak**.
 - **Buat kode ulasan.** Isi nama klien dan layanan, lalu salin link atau kirim langsung lewat WhatsApp.
 - Melihat semua kode beserta statusnya (belum dipakai / sudah dipakai), serta menghapus kode yang belum dipakai.
 - Melihat semua ulasan, **menyembunyikan/menampilkan** ulasan, dan menghapus ulasan.
@@ -63,13 +72,16 @@ Di dashboard kamu bisa:
 Pelanggan memasukkan **kode promo** di halaman Pesan. Website langsung mengecek syaratnya, menampilkan perkiraan harga, dan menuliskan promo di pesan WhatsApp.
 Kamu juga bisa membagikan link yang sudah berisi kodenya: `https://petrajm.tech/pesan?promo=KODE`.
 
-Yang bisa diatur untuk tiap promo:
+Di tab **Promo**, tombol **Buat promo**, **Edit**, atau **Duplikat** membuka pop-up lebar berisi semua pengaturan (di laptop muat satu layar tanpa scroll, ringkasan promo ada di bawah). Semua syarat opsional:
 - **Jenis potongan:** persen (bisa diberi batas maksimal potongan), nominal Rp, atau harga spesial.
-- **Layanan:** tidak dicentang = berlaku untuk semua layanan.
-- **Masa berlaku:** tanggal dan jam mulai serta berakhir (opsional).
-- **Kuota pemakaian:** misalnya 10 pemesan pertama. Kosongkan untuk tanpa batas.
+- **Masa berlaku:** tanggal dan jam mulai serta berakhir, dengan tombol cepat 7/14/30 hari dan akhir bulan.
+- **Hari berlaku:** misalnya hanya Sabtu & Minggu (tombol cepat: hari kerja, akhir pekan).
+- **Jam berlaku (WIB):** misalnya 19.00 sampai 22.00. Boleh melewati tengah malam (22.00 sampai 02.00).
+- **Kuota total:** misalnya 10 pemesan pertama. Kosongkan untuk tanpa batas.
+- **Maks. per orang:** dicek dari nomor WhatsApp. Form Pesan otomatis meminta nomor WA kalau promo memakai batas ini.
 - **Khusus 1 orang:** kode personal yang hanya bisa dipakai sekali. Kamu bisa mencatat untuk siapa kode itu dibuat.
-- **Aktif / nonaktif** kapan saja.
+- **Layanan** tertentu, dan untuk kelas coding bisa dibatasi **online** atau **offline** saja.
+- **Aktif / nonaktif** kapan saja. Status di daftar: Aktif, Terjadwal, Di luar jadwal (di luar hari/jam), Berakhir, Kuota habis, Nonaktif.
 
 Pemakaian dicatat saat pelanggan mengirim form. Kalau pesanannya batal, buka "Pemakaian" lalu tekan **Batalkan**, dan kuotanya kembali.
 Potongan selalu dihitung dari **harga final** yang kalian sepakati. Angka di website hanya perkiraan dari harga mulai.

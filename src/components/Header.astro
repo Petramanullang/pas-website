@@ -41,6 +41,9 @@ const menuActive = !mobileMain.some((n) => isActive(n.href));
           <a class:list={['btn btn--brand btn--sm cta', { on: isActive('/pesan') }]} href="/pesan" aria-current={isActive('/pesan') ? 'page' : undefined}>
             Pesan <Icon name="upright" size={18} />
           </a>
+          <a class:list={['round mine', { on: isActive('/pesananku') || isActive('/struk') }]} href="/pesananku" aria-label="Pesananku (struk pesanan)" title="Pesananku">
+            <Icon name="receipt" size={22} />
+          </a>
           <a class="round wa" href={WA_GENERAL} target="_blank" rel="noopener" aria-label="Chat WhatsApp">
             <Icon name="wa" size={22} />
           </a>
@@ -84,6 +87,12 @@ const menuActive = !mobileMain.some((n) => isActive(n.href));
             </a>
           </li>
         ))}
+        <li>
+          <a href="/pesananku" aria-current={isActive('/pesananku') ? 'page' : undefined}>
+            <Icon name="receipt" size={22} />
+            <span><b>Pesananku</b><em>Struk, status, dan ulasan</em></span>
+          </a>
+        </li>
       </ul>
       <a class="btn btn--wa btn--block" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" /> Chat WhatsApp</a>
     </dialog>
@@ -121,6 +130,8 @@ const menuActive = !mobileMain.some((n) => isActive(n.href));
   .tabs + .actions { margin-left: 0; }
   .cta.on { box-shadow: 0 0 0 3px var(--ink); }
   .wa { width: 48px; height: 48px; background: var(--wa); }
+  .mine { width: 48px; height: 48px; background: var(--panel-2); color: var(--ink); }
+  .mine.on { background: var(--ink); color: #fff; }
 
   @media (max-width: 1260px) {
     .tab:not(.on) .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
