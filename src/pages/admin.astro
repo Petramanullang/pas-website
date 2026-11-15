@@ -18,7 +18,13 @@ import { SERVICES } from '../config';
         </div>
         <div class="field">
           <label for="l-pass">Password</label>
-          <input class="input" id="l-pass" type="password" autocomplete="current-password" required />
+          <div class="pass-wrap">
+            <input class="input" id="l-pass" type="password" autocomplete="current-password" required />
+            <button class="eye" type="button" data-eye aria-label="Tampilkan password" aria-pressed="false" aria-controls="l-pass">
+              <span class="eye-show"><Icon name="eye" size={20} /></span>
+              <span class="eye-hide"><Icon name="eyeoff" size={20} /></span>
+            </button>
+          </div>
         </div>
         <button class="btn btn--block" type="submit" data-login-btn>Masuk</button>
         <p class="status" role="alert" data-login-status></p>
@@ -400,6 +406,17 @@ import { SERVICES } from '../config';
   .fb-filter { display: flex; gap: 0.3rem; flex-wrap: wrap; }
   .fb-filter button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.3rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; min-height: 34px; }
   .fb-filter button[aria-pressed='true'] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .pass-wrap { position: relative; }
+  .pass-wrap .input { padding-right: 3.4rem; }
+  .eye {
+    position: absolute; right: 6px; top: 50%; translate: 0 -50%; width: 40px; height: 40px; border: 0; border-radius: 12px;
+    background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer;
+  }
+  .eye:hover { background: var(--panel-2); color: var(--ink); }
+  .eye .eye-hide, .eye[aria-pressed='true'] .eye-show { display: none; }
+  .eye[aria-pressed='true'] .eye-hide { display: grid; }
+  .eye .eye-show { display: grid; }
 
   .toast {
     position: fixed; left: 50%; bottom: calc(1.25rem + env(safe-area-inset-bottom)); translate: -50% 20px; opacity: 0; pointer-events: none;
@@ -957,6 +974,21 @@ import { SERVICES } from '../config';
     } catch (e) { handle(e); }
   }
 
+  // ---------- tampilkan / sembunyikan password ----------
+  const eye = $<HTMLButtonElement>('[data-eye]');
+  const passInput = $<HTMLInputElement>('#l-pass');
+  const setEye = (show: boolean) => {
+    passInput.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-pressed', String(show));
+    eye.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+  };
+  eye.addEventListener('click', () => {
+    const pos = passInput.selectionStart;
+    setEye(passInput.type === 'password');
+    passInput.focus();
+    if (pos !== null) passInput.setSelectionRange(pos, pos);
+  });
+
   // ---------- events ----------
   $<HTMLFormElement>('#login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -970,6 +1002,7 @@ import { SERVICES } from '../config';
     try {
       await login(email, pass);
       $<HTMLInputElement>('#l-pass').value = '';
+      setEye(false);
       await enter();
     } catch (err) {
       status.textContent = err instanceof Error ? err.message : 'Gagal masuk.';
