@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+import Testimonials from '../components/Testimonials.astro';
+---
+
+<Base title="Testimoni" description="Ulasan asli dari pelanggan PAS (Petra All Service). Setiap ulasan ditulis memakai kode unik dari pesanan.">
+  <PageHead
+    kicker="Testimoni"
+    title="Kata mereka yang sudah order."
+    desc="Setiap ulasan ditulis langsung oleh pelanggan memakai kode unik dari pesanannya. Tidak ada ulasan yang dikarang."
+    subnav={[{ href: '/ulasan', label: 'Tulis ulasan', icon: 'pen' }, { href: '/cara-pesan#langkah-4', label: 'Cara dapat kode ulasan', icon: 'help' }]}
+    subLabel="Tautan ulasan"
+  />
+  <Testimonials />
+  <Pager />
+</Base>

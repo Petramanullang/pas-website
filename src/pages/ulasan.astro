@@ -1,0 +1,272 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { SERVICES, WA_GENERAL } from '../config';
+const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
+---
+
+<Base title="Tulis Ulasan" description="Bagikan pengalamanmu memakai layanan PAS (Petra All Service)." noindex minimalHeader>
+  <section class="rv-page">
+    <div class="wrap narrow">
+      <div class="intro">
+        <p class="kicker">Ulasan pelanggan</p>
+        <h1>Bagaimana pengalamanmu?</h1>
+        <p class="muted">Ulasanmu membantu orang lain memilih dengan tenang. Masukkan kode ulasan yang kamu terima setelah pesanan selesai.</p>
+      </div>
+
+      <form class="card form" id="review-form" novalidate>
+        <div class="field">
+          <label for="r-code">Kode ulasan <span class="req" aria-hidden="true">*</span></label>
+          <div class="code-row">
+            <input class="input code" id="r-code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PAS-XXXXXX" maxlength="24" required aria-describedby="r-code-msg" />
+            <button class="btn btn--ghost" type="button" data-check>Cek kode</button>
+          </div>
+          <p class="msg" id="r-code-msg" role="status" aria-live="polite" data-code-msg>Contoh: PAS-8E18A3. Kode ada di link yang dikirim Petra.</p>
+        </div>
+
+        <fieldset class="field rating">
+          <legend class="label">Rating <span class="req" aria-hidden="true">*</span></legend>
+          <div class="stars-input" data-stars-input>
+            {[5, 4, 3, 2, 1].map((n) => (
+              <>
+                <input type="radio" id={`r-star-${n}`} name="rating" value={n} required />
+                <label for={`r-star-${n}`} title={labels[n - 1]}>
+                  <Icon name="star" size={36} />
+                  <span class="sr-only">{n} bintang, {labels[n - 1]}</span>
+                </label>
+              </>
+            ))}
+          </div>
+          <p class="rating-text" data-rating-text aria-hidden="true">Pilih jumlah bintang</p>
+          <p class="error" id="e-rating" hidden>Pilih rating 1 sampai 5 bintang.</p>
+        </fieldset>
+
+        <div class="row2">
+          <div class="field">
+            <label for="r-name">Nama yang ditampilkan <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="r-name" name="name" type="text" autocomplete="name" maxlength="60" placeholder="Boleh nama panggilan" required />
+            <p class="error" id="e-name" hidden>Nama minimal 2 karakter.</p>
+          </div>
+          <div class="field">
+            <label for="r-service">Layanan yang dipesan <span class="req" aria-hidden="true">*</span></label>
+            <select class="select" id="r-service" name="service" required>
+              <option value="" disabled selected>Pilih layanan…</option>
+              {SERVICES.map((s) => <option value={s.title}>{s.title}</option>)}
+            </select>
+            <p class="error" id="e-service" hidden>Pilih layanan.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="r-comment">Ceritakan pengalamanmu <span class="req" aria-hidden="true">*</span></label>
+          <textarea class="textarea" id="r-comment" name="comment" maxlength="600" required placeholder="Apa yang kamu suka? Bagaimana hasilnya?"></textarea>
+          <div class="under">
+            <p class="error" id="e-comment" hidden>Komentar minimal 10 karakter.</p>
+            <span class="counter" data-counter>0/600</span>
+          </div>
+        </div>
+
+        <p class="consent">Nama, rating, dan komentarmu akan ditampilkan di website ini. Kode ulasan tidak ditampilkan.</p>
+
+        <button class="btn btn--block submit" type="submit" data-submit>Kirim ulasan</button>
+        <p class="status" role="status" aria-live="polite" data-status></p>
+      </form>
+
+      <div class="card done" data-done hidden tabindex="-1">
+        <span class="ok"><Icon name="check" size={34} /></span>
+        <h2>Terima kasih atas ulasanmu!</h2>
+        <p class="muted">Ulasanmu sudah tersimpan dan tampil di bagian testimoni.</p>
+        <div class="done-actions">
+          <a class="btn" href="/#testimoni">Lihat testimoni</a>
+          <a class="btn btn--ghost" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" /> Order lagi</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .rv-page { padding-block: clamp(1.5rem, 5vw, 3.5rem) 1rem;  }
+  .narrow { max-width: 720px; margin-inline: auto; }
+  .intro { text-align: center; margin-bottom: 2rem; }
+  .intro .eyebrow { justify-content: center; }
+  h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); }
+  .muted { color: var(--muted); }
+  .form { padding: clamp(1.25rem, 4vw, 2.25rem); display: grid; gap: 1.35rem; box-shadow: var(--shadow); }
+  .code-row { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; }
+  .code { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 650; }
+  .code::placeholder { letter-spacing: 0.08em; font-weight: 500; }
+  .msg { margin: 0; font-size: 0.87rem; color: var(--muted); }
+  .msg.is-ok { color: var(--ok); font-weight: 600; }
+  .msg.is-bad { color: var(--err); font-weight: 600; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .error { margin: 0; font-size: 0.85rem; color: var(--err); }
+  [aria-invalid='true'] { border-color: var(--err) !important; }
+
+  .rating { border: 0; padding: 0; margin: 0; }
+  .rating legend { padding: 0; margin-bottom: 0.4rem; }
+  .stars-input { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 0.25rem; }
+  .stars-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .stars-input label { cursor: pointer; color: #ddd7cb; padding: 2px; border-radius: 8px; transition: color 0.12s ease, transform 0.12s ease; }
+  .stars-input label:hover { transform: scale(1.08); }
+  .stars-input input:checked ~ label,
+  .stars-input label:hover,
+  .stars-input label:hover ~ label { color: var(--star); }
+  .stars-input:has(label:hover) input:checked ~ label:not(:hover):not(:hover ~ label) { color: #ddd7cb; }
+  .stars-input input:focus-visible + label { outline: 3px solid var(--brand-deep); outline-offset: 2px; }
+  .rating-text { margin: 0.25rem 0 0; font-weight: 600; color: var(--ink-2); font-size: 0.95rem; }
+
+  .under { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .counter { margin-left: auto; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .consent { margin: 0; font-size: 0.85rem; color: var(--muted); }
+  .submit { min-height: 54px; font-size: 1.02rem; }
+  .status { margin: 0; min-height: 1.4em; font-size: 0.92rem; }
+  .status.is-bad { color: var(--err); font-weight: 600; }
+
+  .done { padding: 2.5rem 1.5rem; text-align: center; display: grid; justify-items: center; gap: 0.25rem; box-shadow: var(--shadow); }
+  .done[hidden] { display: none; }
+  .ok { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: #dff5ec; color: var(--ok); margin-bottom: 0.75rem; }
+  .done-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.75rem; }
+  @media (max-width: 560px) {
+    .row2 { grid-template-columns: 1fr; }
+    .code-row { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import { checkCode, submitReview, isConfigured } from '../lib/supabase';
+  import { SERVICES } from '../config';
+
+  const form = document.getElementById('review-form') as HTMLFormElement;
+  const $ = <T extends Element>(s: string) => form.querySelector<T>(s)!;
+  const code = $<HTMLInputElement>('#r-code');
+  const codeMsg = $<HTMLParagraphElement>('[data-code-msg]');
+  const checkBtn = $<HTMLButtonElement>('[data-check]');
+  const name = $<HTMLInputElement>('#r-name');
+  const service = $<HTMLSelectElement>('#r-service');
+  const comment = $<HTMLTextAreaElement>('#r-comment');
+  const counter = $<HTMLSpanElement>('[data-counter]');
+  const ratingText = $<HTMLParagraphElement>('[data-rating-text]');
+  const submit = $<HTMLButtonElement>('[data-submit]');
+  const status = $<HTMLParagraphElement>('[data-status]');
+  const labels = ['Sangat kecewa', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
+  let codeState: 'unknown' | 'ok' | 'invalid' | 'used' = 'unknown';
+
+  const norm = (v: string) => v.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
+  const setMsg = (text: string, kind: '' | 'ok' | 'bad' = '') => {
+    codeMsg.textContent = text;
+    codeMsg.className = kind ? `msg is-${kind}` : 'msg';
+  };
+
+  const matchService = (s: string | null) => {
+    if (!s) return;
+    const low = s.toLowerCase();
+    const hit = SERVICES.find((x) => x.title.toLowerCase() === low || x.id === low || x.short.toLowerCase() === low || x.title.toLowerCase().includes(low));
+    if (hit) service.value = hit.title;
+  };
+
+  async function verify() {
+    const v = norm(code.value);
+    code.value = v;
+    if (v.length < 4) { setMsg('Masukkan kode ulasan terlebih dahulu.', 'bad'); codeState = 'invalid'; return; }
+    setMsg('Memeriksa kode…');
+    checkBtn.disabled = true;
+    try {
+      const r = await checkCode(v);
+      codeState = r.status;
+      if (r.status === 'ok') {
+        setMsg('Kode valid. Silakan isi ulasanmu.', 'ok');
+        code.setAttribute('aria-invalid', 'false');
+        if (r.client_name && !name.value) name.value = r.client_name;
+        matchService(r.service);
+      } else if (r.status === 'used') {
+        setMsg('Kode ini sudah dipakai untuk ulasan. Satu kode hanya untuk satu ulasan.', 'bad');
+        code.setAttribute('aria-invalid', 'true');
+      } else {
+        setMsg('Kode tidak ditemukan. Periksa lagi penulisannya.', 'bad');
+        code.setAttribute('aria-invalid', 'true');
+      }
+    } catch {
+      codeState = 'unknown';
+      setMsg('Tidak bisa memeriksa kode sekarang. Cek koneksi lalu coba lagi.', 'bad');
+    } finally {
+      checkBtn.disabled = false;
+    }
+  }
+
+  checkBtn.addEventListener('click', verify);
+  code.addEventListener('change', verify);
+  code.addEventListener('input', () => { codeState = 'unknown'; code.removeAttribute('aria-invalid'); });
+
+  form.querySelectorAll<HTMLInputElement>('input[name="rating"]').forEach((r) =>
+    r.addEventListener('change', () => {
+      ratingText.textContent = `${r.value} bintang · ${labels[Number(r.value) - 1]}`;
+      $('#e-rating').toggleAttribute('hidden', true);
+    }),
+  );
+  comment.addEventListener('input', () => {
+    counter.textContent = `${comment.value.length}/600`;
+    if (comment.value.trim().length >= 10) setErr(comment, 'e-comment', false);
+  });
+  name.addEventListener('input', () => name.value.trim().length >= 2 && setErr(name, 'e-name', false));
+  service.addEventListener('change', () => setErr(service, 'e-service', false));
+
+  function setErr(el: HTMLElement | null, id: string, on: boolean) {
+    $(`#${id}`).toggleAttribute('hidden', !on);
+    if (el) el.setAttribute('aria-invalid', String(on));
+  }
+
+  // kode dari link: /ulasan?kode=PAS-XXXXXX
+  const fromUrl = new URLSearchParams(location.search).get('kode');
+  if (fromUrl) { code.value = norm(fromUrl); verify(); }
+  if (!isConfigured) setMsg('Website belum terhubung ke database (cek file .env).', 'bad');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    status.textContent = ''; status.className = 'status';
+    const rating = Number((form.querySelector<HTMLInputElement>('input[name="rating"]:checked'))?.value || 0);
+    const errs = {
+      rating: !rating,
+      name: name.value.trim().length < 2,
+      service: !service.value,
+      comment: comment.value.trim().length < 10,
+    };
+    $('#e-rating').toggleAttribute('hidden', !errs.rating);
+    setErr(name, 'e-name', errs.name);
+    setErr(service, 'e-service', errs.service);
+    setErr(comment, 'e-comment', errs.comment);
+    if (codeState === 'unknown') await verify();
+    if (codeState !== 'ok') { code.focus(); return; }
+    if (Object.values(errs).some(Boolean)) {
+      status.textContent = 'Ada isian yang belum lengkap.'; status.className = 'status is-bad';
+      const first = errs.rating ? form.querySelector<HTMLInputElement>('#r-star-5') : errs.name ? name : errs.service ? service : comment;
+      first?.focus();
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = 'Mengirim…';
+    try {
+      const r = await submitReview({ code: norm(code.value), name: name.value.trim(), service: service.value, rating, comment: comment.value.trim() });
+      if (r.status === 'ok') {
+        form.hidden = true;
+        const done = document.querySelector<HTMLElement>('[data-done]')!;
+        done.hidden = false;
+        done.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (r.status === 'used') {
+        codeState = 'used'; setMsg('Kode ini sudah dipakai untuk ulasan.', 'bad'); code.focus();
+      } else if (r.status === 'invalid') {
+        codeState = 'invalid'; setMsg('Kode tidak ditemukan.', 'bad'); code.focus();
+      } else {
+        status.textContent = r.message; status.className = 'status is-bad';
+      }
+    } catch {
+      status.textContent = 'Gagal mengirim. Periksa koneksi internetmu, lalu coba lagi.';
+      status.className = 'status is-bad';
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Kirim ulasan';
+    }
+  });
+</script>

@@ -1,0 +1,112 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+import { WA_GENERAL } from '../config';
+
+const steps = [
+  {
+    id: 'langkah-1', title: 'Pilih layanan & isi form', when: '± 2 menit',
+    desc: 'Pilih layanan di halaman Pesan dan ceritakan kebutuhanmu singkat saja. Pesan WhatsApp tersusun otomatis.',
+    prep: ['Jenis layanan yang dibutuhkan', 'Detail singkat & deadline', 'Kode promo, kalau punya'],
+    cta: { href: '/pesan', label: 'Buka form pesan', wa: false },
+  },
+  {
+    id: 'langkah-2', title: 'Diskusi via WhatsApp', when: 'Gratis, tanpa kewajiban order',
+    desc: 'Kita bahas detail pekerjaan, harga final, dan deadline. Kirim file atau format dari dosen di sini.',
+    prep: ['File, contoh, atau ketentuan tugas', 'Budget kalau ada', 'Pertanyaan apa pun'],
+    cta: { href: WA_GENERAL, label: 'Chat WhatsApp', wa: true },
+  },
+  {
+    id: 'langkah-3', title: 'Dikerjakan', when: 'Sesuai kesepakatan',
+    desc: 'Pengerjaan berjalan sesuai yang sudah disepakati. Untuk kelas coding, sesi dijadwalkan online atau offline.',
+    prep: ['Tetap terhubung di WhatsApp', 'Beri masukan kalau ada yang kurang pas'],
+    cta: { href: '/layanan', label: 'Lihat detail layanan', wa: false },
+  },
+  {
+    id: 'langkah-4', title: 'Selesai & beri ulasan', when: 'Setelah pesanan selesai',
+    desc: 'Kamu menerima link berisi kode ulasan. Ceritakan pengalamanmu supaya orang lain bisa memilih dengan tenang.',
+    prep: ['Buka link ulasan dari Petra', 'Beri bintang & komentar'],
+    cta: { href: '/testimoni', label: 'Lihat testimoni', wa: false },
+  },
+];
+---
+
+<Base title="Cara Pesan" description="Alur pemesanan PAS: isi form, diskusi lewat WhatsApp, dikerjakan, lalu beri ulasan.">
+  <PageHead
+    kicker="Cara pesan"
+    title="Dari tanya sampai selesai."
+    desc="Empat langkah sederhana. Kamu selalu tahu harga final sebelum pengerjaan dimulai."
+    subnav={steps.map((s, i) => ({ href: `#${s.id}`, label: `${i + 1}. ${s.title}` }))}
+    subLabel="Langkah pemesanan"
+  />
+
+  <section class="panel track" aria-label="Alur pemesanan">
+    <ol class="flow">
+      {steps.map((s, i) => (
+        <li id={s.id} class="step reveal" style={`transition-delay:${i * 90}ms`}>
+          <div class="rail" aria-hidden="true"><span class:list={['node', { last: i === steps.length - 1 }]}>{i + 1}</span></div>
+          <article class="card-step">
+            <p class="when">{s.when}</p>
+            <h2>{s.title}</h2>
+            <p class="muted">{s.desc}</p>
+            <ul class="checks">
+              {s.prep.map((p) => <li><Icon name="check" size={18} /><span>{p}</span></li>)}
+            </ul>
+            <a class:list={['btn btn--sm', { 'btn--wa': s.cta.wa }]} href={s.cta.href} target={s.cta.wa ? '_blank' : undefined} rel={s.cta.wa ? 'noopener' : undefined}>
+              {s.cta.wa && <Icon name="wa" size={18} />}{s.cta.label} {!s.cta.wa && <Icon name="arrow" size={16} />}
+            </a>
+          </article>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="panel panel--dark start">
+    <div>
+      <p class="kicker">Siap mulai?</p>
+      <h2>Langkah pertama cuma dua menit.</h2>
+    </div>
+    <div class="start-ctas">
+      <a class="btn btn--brand" href="/pesan">Isi form pesan <Icon name="upright" size={18} /></a>
+      <a class="btn btn--ghost" href="/faq">Baca FAQ</a>
+    </div>
+  </section>
+
+  <Pager />
+</Base>
+
+<style>
+  .track { padding-block: clamp(1.6rem, 3vw, 2.4rem); overflow: hidden; }
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); position: relative; }
+  .flow::before {
+    content: ''; position: absolute; left: 22px; right: 22px; top: 22px; height: 2px;
+    background: repeating-linear-gradient(90deg, #cfcbc2 0 8px, transparent 8px 14px);
+  }
+  .step { display: grid; grid-template-rows: auto 1fr; gap: 0; scroll-margin-top: 110px; }
+  .rail { position: relative; height: 72px; }
+  .rail::after { content: ''; position: absolute; left: 21px; top: 44px; bottom: 0; width: 2px; background: #cfcbc2; }
+  .node { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); font-family: var(--font-head); font-weight: 800; font-size: 1.15rem; box-shadow: 0 0 0 7px var(--panel); }
+  .node.last { background: var(--ink); color: #fff; }
+  .card-step { display: grid; gap: 0.7rem; align-content: start; padding: 1.3rem; border-radius: 24px; background: var(--panel-2); transition: background-color 0.25s ease, transform 0.25s ease; }
+  .step:hover .card-step, .step:target .card-step { background: #fff3d1; transform: translateY(-3px); }
+  .when { margin: 0; font-size: 0.78rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .card-step h2 { font-size: 1.35rem; margin: 0; }
+  .card-step p { margin: 0; }
+  .card-step .btn { justify-self: start; margin-top: 0.3rem; }
+  .checks { font-size: 0.92rem; }
+
+  .start { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .start h2 { color: #fff; margin: 0; }
+  .start-ctas { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .start .btn--ghost { color: #fff; border-color: rgb(255 255 255 / 0.35); }
+
+  @media (max-width: 1000px) {
+    .flow { grid-template-columns: 1fr; gap: 0; }
+    .flow::before { left: 21px; right: auto; top: 22px; bottom: 22px; width: 2px; height: auto; background: repeating-linear-gradient(180deg, #cfcbc2 0 8px, transparent 8px 14px); }
+    .step { grid-template-columns: 44px 1fr; grid-template-rows: auto; gap: 1rem; padding-bottom: var(--gap); }
+    .rail { height: auto; }
+    .rail::after { display: none; }
+  }
+</style>

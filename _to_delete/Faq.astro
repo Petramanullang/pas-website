@@ -1,0 +1,41 @@
+---
+import { FAQ } from '../config';
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<section class="panel faq" id="faq" aria-labelledby="faq-title">
+  <div class="head">
+    <p class="kicker">FAQ</p>
+    <h2 id="faq-title">Pertanyaan yang sering ditanyakan</h2>
+    <p class="muted">Belum terjawab? Tanyakan langsung lewat WhatsApp, gratis.</p>
+  </div>
+  <div class="list">
+    {FAQ.map((f, i) => (
+      <details name="faq" open={i === 0}>
+        <summary>{f.q}<span class="pm" aria-hidden="true"></span></summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+  </div>
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+</section>
+
+<style>
+  .faq { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
+  .list { display: grid; }
+  details { border-top: 1px solid var(--line); }
+  details:last-child { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.1rem 0; font-weight: 650; font-size: 1.02rem; min-height: 56px; }
+  summary::-webkit-details-marker { display: none; }
+  .pm { position: relative; width: 30px; height: 30px; flex: none; border-radius: 50%; border: 1.5px solid var(--ink); transition: background-color 0.15s ease; }
+  .pm::before, .pm::after { content: ''; position: absolute; left: 50%; top: 50%; width: 11px; height: 2px; background: currentColor; translate: -50% -50%; transition: rotate 0.2s ease; }
+  .pm::after { rotate: 90deg; }
+  details[open] .pm { background: var(--ink); color: #fff; }
+  details[open] .pm::after { rotate: 0deg; }
+  details p { padding: 0 2.5rem 1.2rem 0; margin: 0; color: var(--muted); }
+  @media (max-width: 860px) { .faq { grid-template-columns: 1fr; } }
+</style>

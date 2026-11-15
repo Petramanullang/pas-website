@@ -1,0 +1,45 @@
+---
+import Icon from './Icon.astro';
+import { SITE, CONTACT, NAV, WA_GENERAL } from '../config';
+const year = new Date().getFullYear();
+---
+
+<footer class="shell foot">
+  <div class="panel panel--dark inner">
+    <div class="left">
+      <img src="/logo.svg" alt="Logo PAS" width="96" height="58" loading="lazy" />
+      <p class="f-tag">{SITE.fullName}<br /><span class="muted">{SITE.tagline}</span></p>
+    </div>
+    <nav aria-label="Navigasi footer" class="links">
+      {NAV.map((n) => <a href={n.href}>{n.label}</a>)}
+      <a href="/ulasan">Tulis ulasan</a>
+    </nav>
+    <div class="contact">
+      <p class="kicker">Kontak</p>
+      <a class="phone" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" size={20} /> {CONTACT.phoneDisplay}</a>
+      <p class="muted small">{SITE.ownerNote}</p>
+    </div>
+    <div class="bottom">
+      <span>© {year} {SITE.name} · {SITE.fullName}</span>
+      <a href="#main">Kembali ke atas ↑</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot { padding-bottom: 14px; }
+  .inner { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 2rem; }
+  .left img { width: 96px; height: auto; }
+  .f-tag { margin: 1rem 0 0; font-weight: 650; }
+  .links { display: grid; gap: 0.5rem; align-content: start; }
+  .links a, .bottom a { color: #e7e4dc; text-decoration: none; }
+  .links a:hover, .bottom a:hover, .phone:hover { color: var(--brand); }
+  .phone { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; color: #fff; text-decoration: none; white-space: nowrap; }
+  .small { font-size: 0.9rem; margin-top: 0.75rem; }
+  .bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1.25rem; border-top: 1px solid var(--line-dark); font-size: 0.88rem; color: #a9a69e; }
+  @media (max-width: 860px) {
+    :global(body:has(.bottom-bar)) .foot { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .inner { grid-template-columns: 1fr 1fr; }
+    .left, .contact { grid-column: 1 / -1; }
+  }
+</style>

@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE, CONTACT } from '../config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+  minimalHeader?: boolean;
+  hideFooter?: boolean;
+  /** Beranda: satu layar penuh tanpa scroll, tanpa footer */
+  home?: boolean;
+}
+const { title, description = SITE.description, noindex = false, minimalHeader = false, hideFooter = false, home = false } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name} (${SITE.fullName})` : `${SITE.name} (${SITE.fullName}) | Bantuan Tugas, Website, Desain UI/UX & Kelas Coding`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og-image.png', Astro.site);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  name: `${SITE.name} (${SITE.fullName})`,
+  url: SITE.url,
+  image: ogImage.href,
+  logo: new URL('/logo.svg', Astro.site).href,
+  description: SITE.description,
+  telephone: `+${CONTACT.waNumber}`,
+  areaServed: 'ID',
+  priceRange: 'Rp30.000 sampai Rp100.000+',
+  inLanguage: 'id-ID',
+};
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#e8e6e1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content={`${SITE.name} (${SITE.fullName})`} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // Arah animasi perpindahan halaman (maju/mundur sesuai urutan menu)
+      (function () {
+        var order = ['/', '/layanan', '/cara-pesan', '/karya', '/testimoni', '/faq', '/saran', '/pesan'];
+        function idx(u) {
+          try { var p = new URL(u, location.href).pathname.replace(/\/$/, '') || '/'; return order.indexOf(p); } catch (e) { return -1; }
+        }
+        window.addEventListener('pagereveal', function (e) {
+          if (!e.viewTransition) return;
+          var from = (window.navigation && navigation.activation && navigation.activation.from) ? navigation.activation.from.url : document.referrer;
+          var a = idx(from), b = idx(location.href);
+          e.viewTransition.types.add(a < 0 || b < 0 || a === b ? 'fade' : b > a ? 'forward' : 'backward');
+        });
+      })();
+    </script>
+  </head>
+  <body class:list={{ 'is-home': home }}>
+    <a class="skip-link" href="#main">Lewati ke konten</a>
+    <Header minimal={minimalHeader} />
+    <main id="main" class="shell page">
+      <slot />
+    </main>
+    {!hideFooter && !home && <Footer />}
+
+    <script>
+      // Animasi muncul saat di-scroll (dimatikan otomatis jika pengguna memilih "reduce motion")
+      const els = document.querySelectorAll<HTMLElement>('.reveal');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce || !('IntersectionObserver' in window)) {
+        els.forEach((el) => el.classList.add('is-in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('is-in');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+        );
+        els.forEach((el) => io.observe(el));
+      }
+    </script>
+  </body>
+</html>

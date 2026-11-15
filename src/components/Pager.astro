@@ -1,0 +1,46 @@
+---
+// Navigasi sebelumnya / berikutnya, mengikuti urutan menu
+import Icon from './Icon.astro';
+import { NAV } from '../config';
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const i = NAV.findIndex((n) => n.href === path);
+const prev = i > 0 ? NAV[i - 1] : null;
+const next = i >= 0 && i < NAV.length - 1 ? NAV[i + 1] : null;
+---
+
+<nav class="pager" aria-label="Halaman sebelumnya dan berikutnya">
+  {prev ? (
+    <a class="pg panel prev" href={prev.href} rel="prev">
+      <span class="dir"><Icon name="arrowleft" size={18} /> Sebelumnya</span>
+      <strong>{prev.label}</strong>
+      <span class="muted">{prev.desc}</span>
+    </a>
+  ) : <span />}
+  {next && (
+    <a class="pg panel next" href={next.href} rel="next">
+      <span class="dir">Berikutnya <Icon name="arrow" size={18} /></span>
+      <strong>{next.label}</strong>
+      <span class="muted">{next.desc}</span>
+    </a>
+  )}
+</nav>
+
+<style>
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+  .pg { display: grid; gap: 0.2rem; text-decoration: none; padding: 1.3rem 1.6rem; transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease; }
+  .pg:hover { background: var(--ink); color: #fff; transform: translateY(-2px); }
+  .pg:hover .muted { color: #b9b6ad; }
+  .pg strong { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; }
+  .dir { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .pg:hover .dir { color: var(--brand); }
+  .next { text-align: right; justify-items: end; }
+  .pg .muted { font-size: 0.9rem; }
+  .pg { min-width: 0; }
+  .pg strong { overflow-wrap: anywhere; }
+  @media (max-width: 560px) {
+    .pg { padding: 1rem 1.1rem; }
+    .dir { font-size: 0.72rem; letter-spacing: 0.04em; }
+    .pg strong { font-size: 1.15rem; }
+    .pg .muted { display: none; }
+  }
+</style>

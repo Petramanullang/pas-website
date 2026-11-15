@@ -1,0 +1,259 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+---
+
+<Base title="Karya" description="Arsip karya PAS: website, desain UI/UX, dan proyek lain yang sudah dikerjakan.">
+  <PageHead kicker="Arsip karya" title="Yang sudah dikerjakan." desc="Tarik map dari laci untuk melihat detail tiap proyek.">
+    <div class="filters" role="group" aria-label="Filter kategori" data-filters>
+      <button type="button" class="chip" data-cat="" aria-pressed="true">Semua <span data-n=""></span></button>
+      <button type="button" class="chip" data-cat="Website" aria-pressed="false">Website <span data-n="Website"></span></button>
+      <button type="button" class="chip" data-cat="UI/UX" aria-pressed="false">UI/UX <span data-n="UI/UX"></span></button>
+      <button type="button" class="chip" data-cat="Lainnya" aria-pressed="false">Lainnya <span data-n="Lainnya"></span></button>
+    </div>
+  </PageHead>
+
+  <section class="panel cabinet" aria-label="Laci arsip karya">
+    <div class="drawer" data-drawer aria-busy="true">
+      <ul class="folders" data-folders>
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <li class="folder ghost" style={`--i:${i};--n:6`}><div class="body"><span class={`ktab t${i % 3}`}><b>···</b><em></em></span></div></li>
+        ))}
+      </ul>
+      <div class="front">
+        <span class="handle" aria-hidden="true"></span>
+        <span class="klabel">arsip karya PAS</span>
+      </div>
+    </div>
+    <p class="state" data-state role="status" aria-live="polite">Membuka laci…</p>
+  </section>
+
+  <dialog class="sheet" data-sheet aria-labelledby="sheet-title">
+    <div class="sheet-inner">
+      <button class="round sheet-close" type="button" data-close aria-label="Tutup"><Icon name="close" size={20} /></button>
+      <div class="media" data-media></div>
+      <div class="info">
+        <div class="meta"><span class="tag" data-cat-tag></span><span class="muted" data-num></span></div>
+        <h2 id="sheet-title" data-title></h2>
+        <p class="muted by" data-by></p>
+        <p data-summary></p>
+        <ul class="tech" data-tech></ul>
+        <a class="btn" href="/karya" data-visit target="_blank" rel="noopener" hidden>Kunjungi <Icon name="upright" size={18} /></a>
+      </div>
+    </div>
+  </dialog>
+
+  <Pager />
+</Base>
+
+<style>
+  /* Elemen map dibuat lewat JavaScript, jadi dipilih dengan :global() di dalam .folders (tetap terbatas di halaman ini) */
+  .filters { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .filters .chip { background: transparent; cursor: pointer; }
+  .filters .chip[aria-pressed='true'] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .filters span:empty { display: none; }
+  .filters span { opacity: 0.6; font-variant-numeric: tabular-nums; }
+
+  /* ===== Laci arsip (referensi gambar 4) ===== */
+  .cabinet { background: #e2e1dd; padding-block: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2.5rem); overflow: hidden; }
+  .drawer { --stroke: 1.5px solid var(--ink); max-width: 920px; margin-inline: auto; }
+  .folders { list-style: none; margin: 0; padding: 0; display: grid; }
+  .folders :global(.folder) {
+    --w: calc(72% + (28% * var(--i)) / max(var(--n) - 1, 1));
+    position: relative; width: var(--w); margin: 0 auto; height: 58px; margin-top: -24px;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1);
+  }
+  .folders :global(.folder:first-child) { margin-top: 30px; }
+  .folders :global(.body) {
+    position: absolute; inset: 0; display: block; margin: 0; padding: 0;
+    border: 1.5px solid var(--ink); border-bottom: 0; border-radius: 12px 12px 0 0; background: #e2e1dd;
+  }
+  .folders :global(button.body) { font: inherit; color: inherit; text-align: left; cursor: pointer; appearance: none; width: 100%; }
+  .folders :global(.ktab) {
+    position: absolute; top: -31px; height: 32px; width: 36%;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0 1rem;
+    border: 1.5px solid var(--ink); border-bottom: 0; border-radius: 11px 11px 0 0; background: #e2e1dd;
+    font-size: 0.92rem; color: var(--ink);
+  }
+  .folders :global(.ktab::after) { content: ''; position: absolute; left: -1.5px; right: -1.5px; bottom: -2px; height: 3px; background: inherit; }
+  .folders :global(.t0) { left: 5%; }
+  .folders :global(.t1) { left: 34%; }
+  .folders :global(.t2) { right: 5%; }
+  .folders :global(.ktab b) { font-weight: 500; font-variant-numeric: tabular-nums; flex: none; }
+  .folders :global(.ktab em) { font-style: normal; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .folders :global(.divider .ktab) { background: var(--ink); color: #fff; width: auto; min-width: 22%; font-weight: 700; letter-spacing: 0.04em; gap: 1.6rem; }
+  .folders :global(.divider .ktab::after) { background: #e2e1dd; }
+  .folders :global(.divider .ktab b) { font-weight: 700; }
+  .folders :global(.folder:has(> button:hover)), .folders :global(.folder:has(> button:focus-visible)) { transform: translateY(-14px); }
+  .folders :global(button:hover .ktab), .folders :global(button:focus-visible .ktab) { background: var(--brand); }
+  .folders :global(button:focus-visible) { outline: none; }
+  .folders :global(button:focus-visible .ktab) { outline: 3px solid var(--brand-deep); outline-offset: 2px; }
+  .folders :global(.ghost .ktab b), .folders :global(.ghost .ktab em) { opacity: 0.35; }
+  :global(.js) .folders :global(.folder.enter) { animation: rise 0.5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 35ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+
+  .front {
+    position: relative; margin-top: -18px; height: 120px; border: var(--stroke); border-radius: 4px 4px 18px 18px; background: #f1f0ec;
+    display: grid; place-items: center;
+  }
+  .front::before { content: ''; position: absolute; left: -12px; right: -12px; top: -1px; height: 14px; border: var(--stroke); border-radius: 4px; background: #e9e8e4; }
+  .handle { position: absolute; top: 36px; width: 120px; height: 10px; border: var(--stroke); border-radius: 0 0 10px 10px; border-top: 0; }
+  .klabel { margin-top: 26px; background: var(--brand); padding: 0.4rem 1.1rem; border-radius: 10px; border: var(--stroke); font-weight: 600; }
+  .state { text-align: center; margin: 1.2rem 0 0; color: var(--ink-2); font-weight: 500; }
+  .state:empty { display: none; }
+
+  /* ===== Detail ===== */
+  .sheet { border: 0; padding: 0; background: transparent; width: min(100% - 24px, 980px); max-height: calc(100dvh - 24px); overflow: auto; }
+  .sheet::backdrop { background: rgb(21 21 21 / 0.55); backdrop-filter: blur(4px); }
+  .sheet[open] { animation: pop 0.28s cubic-bezier(.2,.8,.2,1); }
+  @keyframes pop { from { opacity: 0; transform: translateY(24px) scale(0.98); } }
+  .sheet-inner { position: relative; background: var(--panel); border-radius: var(--r-panel); display: grid; grid-template-columns: 1.15fr 1fr; overflow: hidden; }
+  .sheet-close { position: absolute; top: 14px; right: 14px; z-index: 2; background: #fff; color: var(--ink); box-shadow: var(--shadow-pop); }
+  .media { background: var(--panel-2); min-height: 320px; display: grid; place-items: center; }
+  .media :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .media :global(.ph) { font-family: var(--font-head); font-weight: 850; font-size: 5rem; color: #c9c5bc; letter-spacing: -0.03em; }
+  .info { padding: clamp(1.5rem, 3vw, 2.2rem); display: grid; gap: 0.7rem; align-content: start; }
+  .meta { display: flex; gap: 0.6rem; align-items: center; font-variant-numeric: tabular-nums; padding-right: 3rem; }
+  .info h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.3rem); overflow-wrap: anywhere; }
+  .info p { margin: 0; }
+  .by { font-size: 0.95rem; }
+  .tech { list-style: none; padding: 0; margin: 0.2rem 0 0.4rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .tech :global(li) { padding: 0.25rem 0.7rem; border-radius: 999px; border: 1.5px solid var(--line); font-size: 0.82rem; font-weight: 600; }
+  [data-visit] { justify-self: start; }
+
+  @media (max-width: 860px) {
+    .sheet-inner { grid-template-columns: 1fr; }
+    .media { min-height: 180px; max-height: 240px; }
+    .sheet { width: calc(100% - 16px); }
+  }
+  @media (max-width: 640px) {
+    .cabinet { padding-inline: 10px; padding-top: 2.6rem; }
+    .folders :global(.folder) { --w: calc(90% + (10% * var(--i)) / max(var(--n) - 1, 1)); height: 52px; margin-top: -22px; }
+    .folders :global(.ktab) { width: 70%; font-size: 0.82rem; padding: 0 0.7rem; height: 30px; top: -29px; }
+    .folders :global(.t0), .folders :global(.t1) { left: 3%; right: auto; }
+    .folders :global(.t2) { right: 3%; left: auto; }
+    .folders :global(.divider .ktab) { width: auto; min-width: 42%; }
+    .front { height: 92px; }
+    .handle { top: 26px; width: 90px; }
+    .klabel { font-size: 0.85rem; }
+  }
+</style>
+
+<script>
+  import { getProjects, type Project } from '../lib/supabase';
+
+  const list = document.querySelector<HTMLUListElement>('[data-folders]')!;
+  const drawer = document.querySelector<HTMLElement>('[data-drawer]')!;
+  const state = document.querySelector<HTMLElement>('[data-state]')!;
+  const sheet = document.querySelector<HTMLDialogElement>('[data-sheet]')!;
+  const CATS = ['Website', 'UI/UX', 'Lainnya'] as const;
+  const SHORT: Record<string, string> = { Website: 'WEB', 'UI/UX': 'UI/UX', Lainnya: 'LAIN' };
+  let all: (Project & { no: number })[] = [];
+  let lastTrigger: HTMLElement | null = null;
+
+  const pad = (n: number) => String(n).padStart(3, '0');
+
+  function render(cat: string) {
+    list.innerHTML = '';
+    const items = cat ? all.filter((p) => p.category === cat) : all;
+    type Row = { kind: 'div'; cat: string; count: number } | { kind: 'p'; p: Project & { no: number } };
+    const rows: Row[] = [];
+    for (const c of CATS) {
+      const group = items.filter((p) => p.category === c);
+      if (!group.length) continue;
+      rows.push({ kind: 'div', cat: c, count: group.length });
+      group.forEach((p) => rows.push({ kind: 'p', p }));
+    }
+    const n = rows.length;
+    let tabPos = 0;
+    rows.forEach((r, i) => {
+      const li = document.createElement('li');
+      li.className = `folder enter${r.kind === 'div' ? ' divider' : ''}`;
+      li.style.setProperty('--i', String(i));
+      li.style.setProperty('--n', String(n));
+      const btn = document.createElement(r.kind === 'div' ? 'div' : 'button');
+      btn.className = 'body';
+      const tab = document.createElement('span');
+      const b = document.createElement('b');
+      const em = document.createElement('em');
+      if (r.kind === 'div') {
+        tab.className = `ktab t${i % 2 === 0 ? 0 : 1}`;
+        b.textContent = SHORT[r.cat];
+        em.textContent = pad(r.count);
+        btn.setAttribute('aria-hidden', 'true');
+      } else {
+        tab.className = `ktab t${tabPos++ % 3}`;
+        b.textContent = pad(r.p.no);
+        em.textContent = r.p.title;
+        (btn as HTMLButtonElement).type = 'button';
+        btn.setAttribute('aria-label', `${pad(r.p.no)} ${r.p.title}${r.p.year ? ', ' + r.p.year : ''}. Lihat detail`);
+        btn.addEventListener('click', () => open(r.p, btn));
+      }
+      tab.append(b, em);
+      btn.append(tab);
+      li.append(btn);
+      list.append(li);
+    });
+  }
+
+  function open(p: Project & { no: number }, trigger: HTMLElement) {
+    lastTrigger = trigger;
+    const q = <T extends Element>(s: string) => sheet.querySelector<T>(s)!;
+    const media = q<HTMLElement>('[data-media]');
+    media.innerHTML = '';
+    if (p.image_url) {
+      const img = document.createElement('img');
+      img.src = p.image_url; img.alt = `Tampilan ${p.title}`; img.loading = 'lazy'; img.decoding = 'async';
+      media.append(img);
+    } else {
+      const ph = document.createElement('span'); ph.className = 'ph'; ph.textContent = pad(p.no);
+      media.append(ph);
+    }
+    q('[data-cat-tag]').textContent = p.category;
+    q('[data-num]').textContent = `No. ${pad(p.no)}`;
+    q('[data-title]').textContent = p.title;
+    q('[data-by]').textContent = [p.client, p.year].filter(Boolean).join(' · ');
+    q('[data-summary]').textContent = p.summary || '';
+    const tech = q<HTMLUListElement>('[data-tech]');
+    tech.innerHTML = '';
+    p.tech.forEach((t) => { const li = document.createElement('li'); li.textContent = t; tech.append(li); });
+    const visit = q<HTMLAnchorElement>('[data-visit]');
+    visit.hidden = !p.url;
+    if (p.url) visit.href = p.url;
+    sheet.showModal();
+  }
+  sheet.querySelector('[data-close]')!.addEventListener('click', () => sheet.close());
+  sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+  sheet.addEventListener('close', () => lastTrigger?.focus());
+
+  const filters = document.querySelectorAll<HTMLButtonElement>('[data-filters] [data-cat]');
+  filters.forEach((f) =>
+    f.addEventListener('click', () => {
+      filters.forEach((x) => x.setAttribute('aria-pressed', String(x === f)));
+      render(f.dataset.cat || '');
+    }),
+  );
+
+  getProjects()
+    .then((data) => {
+      const order = (c: string) => CATS.indexOf(c as (typeof CATS)[number]);
+      const sorted = [...data].sort((a, b) => order(a.category) - order(b.category) || a.sort_order - b.sort_order);
+      all = sorted.map((p, i) => ({ ...p, no: i + 1 }));
+      const setN = (sel: string, n: number) => { document.querySelector(sel)!.textContent = n ? String(n) : ''; };
+      setN('[data-n=""]', all.length);
+      CATS.forEach((c) => setN(`[data-n="${c}"]`, all.filter((p) => p.category === c).length));
+      if (!all.length) {
+        state.textContent = 'Laci ini masih kosong. Karya pertama akan segera diarsipkan di sini.';
+        return;
+      }
+      state.textContent = '';
+      render('');
+      const id = new URLSearchParams(location.search).get('id');
+      const hit = id && all.find((p) => p.id === id);
+      if (hit) open(hit, list.querySelector('button') as HTMLElement);
+    })
+    .catch(() => { state.textContent = 'Arsip belum bisa dimuat. Periksa koneksi lalu muat ulang halaman.'; })
+    .finally(() => drawer.setAttribute('aria-busy', 'false'));
+</script>

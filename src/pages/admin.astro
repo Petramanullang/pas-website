@@ -1,0 +1,1030 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { SERVICES } from '../config';
+---
+
+<Base title="Admin" noindex minimalHeader hideFooter>
+  <section class="admin">
+    <!-- LOGIN -->
+    <div class="login-wrap" data-view="login" hidden>
+      <form class="card login" id="login-form" novalidate>
+        <img src="/logo.svg" alt="" width="84" height="51" />
+        <h1>Admin PAS</h1>
+        <p class="muted">Masuk dengan akun admin portofoliomu.</p>
+        <div class="field">
+          <label for="l-email">Email</label>
+          <input class="input" id="l-email" type="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="l-pass">Password</label>
+          <input class="input" id="l-pass" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn--block" type="submit" data-login-btn>Masuk</button>
+        <p class="status" role="alert" data-login-status></p>
+      </form>
+    </div>
+
+    <!-- LOADING / NOT ADMIN -->
+    <div class="center" data-view="loading">
+      <p class="muted">Memuat…</p>
+    </div>
+    <div class="center" data-view="denied" hidden>
+      <div class="card login">
+        <h1>Bukan akun admin</h1>
+        <p class="muted">Akun <strong data-denied-email></strong> tidak terdaftar sebagai admin.</p>
+        <button class="btn btn--ghost" type="button" data-logout>Keluar</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="dash" data-view="dash" hidden>
+      <div class="top">
+        <div>
+          <h1>Dashboard PAS</h1>
+          <p class="muted">Masuk sebagai <strong data-email></strong></p>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn--ghost sm" type="button" data-refresh><Icon name="refresh" size={18} /> Muat ulang</button>
+          <button class="btn btn--ghost sm" type="button" data-logout>Keluar</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat card"><span>Rata-rata rating</span><strong data-s-avg>0</strong></div>
+        <div class="stat card"><span>Ulasan tampil</span><strong data-s-visible>0</strong></div>
+        <div class="stat card"><span>Ulasan disembunyikan</span><strong data-s-hidden>0</strong></div>
+        <div class="stat card"><span>Kode belum dipakai</span><strong data-s-open>0</strong></div>
+      </div>
+
+      <div class="grid">
+        <form class="card new" id="new-form">
+          <h2>Buat kode ulasan</h2>
+          <p class="muted small">Buat setelah pesanan selesai, lalu kirim link-nya ke klien.</p>
+          <div class="field">
+            <label for="n-client">Nama klien <span class="opt">(opsional, terisi otomatis di form)</span></label>
+            <input class="input" id="n-client" maxlength="60" placeholder="Contoh: Budi" />
+          </div>
+          <div class="field">
+            <label for="n-service">Layanan</label>
+            <select class="select" id="n-service">
+              {SERVICES.map((s) => <option value={s.title}>{s.title}</option>)}
+            </select>
+          </div>
+          <div class="field">
+            <label for="n-note">Catatan <span class="opt">(hanya untukmu)</span></label>
+            <input class="input" id="n-note" maxlength="120" placeholder="Contoh: website portofolio, selesai 15 Nov" />
+          </div>
+          <button class="btn btn--block" type="submit" data-new-btn>Buat kode</button>
+
+          <div class="result" data-result hidden>
+            <span class="res-label">Link ulasan</span>
+            <div class="link-row">
+              <input class="input mono" readonly data-result-link aria-label="Link ulasan" />
+              <button class="btn btn--brand sm" type="button" data-copy-result>Salin</button>
+            </div>
+            <a class="btn btn--wa btn--block sm" data-wa-result target="_blank" rel="noopener"><Icon name="wa" /> Kirim lewat WhatsApp</a>
+          </div>
+        </form>
+
+        <div class="card panel">
+          <div class="tabs" role="tablist" aria-label="Data">
+            <button role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="true" type="button" data-tab="reviews">Ulasan <span data-c-reviews>0</span></button>
+            <button role="tab" id="tab-codes" aria-controls="panel-codes" aria-selected="false" type="button" data-tab="codes" tabindex="-1">Kode <span data-c-codes>0</span></button>
+            <button role="tab" id="tab-projects" aria-controls="panel-projects" aria-selected="false" type="button" data-tab="projects" tabindex="-1">Karya <span data-c-projects>0</span></button>
+            <button role="tab" id="tab-promos" aria-controls="panel-promos" aria-selected="false" type="button" data-tab="promos" tabindex="-1">Promo <span data-c-promos>0</span></button>
+            <button role="tab" id="tab-feedback" aria-controls="panel-feedback" aria-selected="false" type="button" data-tab="feedback" tabindex="-1">Saran <span data-c-feedback>0</span></button>
+          </div>
+
+          <div role="tabpanel" id="panel-reviews" aria-labelledby="tab-reviews" class="tabpanel" data-panel="reviews">
+            <div class="list" data-reviews></div>
+            <p class="empty muted" data-reviews-empty hidden>Belum ada ulasan.</p>
+          </div>
+          <div role="tabpanel" id="panel-codes" aria-labelledby="tab-codes" class="tabpanel" data-panel="codes" hidden>
+            <div class="list" data-codes></div>
+            <p class="empty muted" data-codes-empty hidden>Belum ada kode.</p>
+          </div>
+          <div role="tabpanel" id="panel-projects" aria-labelledby="tab-projects" class="tabpanel" data-panel="projects" hidden>
+            <div class="proj-bar">
+              <p class="muted small">Karya tampil di halaman <a href="/karya" target="_blank">/karya</a> sebagai map di laci arsip.</p>
+              <button class="btn btn--sm" type="button" data-add-project><Icon name="plus" size={18} /> Tambah karya</button>
+            </div>
+            <div class="list" data-projects></div>
+            <p class="empty muted" data-projects-empty hidden>Belum ada karya. Tambahkan yang pertama.</p>
+          </div>
+          <div role="tabpanel" id="panel-promos" aria-labelledby="tab-promos" class="tabpanel" data-panel="promos" hidden>
+            <div class="proj-bar">
+              <p class="muted small">Pelanggan memasukkan kode di halaman <a href="/pesan" target="_blank">/pesan</a>. Link langsung: <code>/pesan?promo=KODE</code></p>
+              <button class="btn btn--sm" type="button" data-add-promo><Icon name="plus" size={18} /> Buat promo</button>
+            </div>
+            <div class="list" data-promos></div>
+            <p class="empty muted" data-promos-empty hidden>Belum ada promo. Buat yang pertama.</p>
+          </div>
+          <div role="tabpanel" id="panel-feedback" aria-labelledby="tab-feedback" class="tabpanel" data-panel="feedback" hidden>
+            <div class="proj-bar">
+              <p class="muted small">Saran dari halaman <a href="/saran" target="_blank">/saran</a>. Hanya bisa dibaca admin.</p>
+              <div class="fb-filter" role="group" aria-label="Filter status" data-fb-filter>
+                <button type="button" data-st="" aria-pressed="true">Semua</button>
+                <button type="button" data-st="baru" aria-pressed="false">Baru</button>
+                <button type="button" data-st="dibaca" aria-pressed="false">Dibaca</button>
+                <button type="button" data-st="selesai" aria-pressed="false">Selesai</button>
+              </div>
+            </div>
+            <div class="list" data-feedback></div>
+            <p class="empty muted" data-feedback-empty hidden>Belum ada saran.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dialog class="pdlg" data-pdlg aria-labelledby="pdlg-title">
+      <form class="pform" id="project-form" method="dialog" novalidate>
+        <div class="pform-head">
+          <h2 id="pdlg-title" data-pdlg-title>Tambah karya</h2>
+          <button class="round round--light" type="button" data-pdlg-close aria-label="Tutup"><Icon name="close" size={20} /></button>
+        </div>
+        <div class="field">
+          <label for="p-title">Judul <span class="req">*</span></label>
+          <input class="input" id="p-title" maxlength="80" required placeholder="Contoh: Website Portofolio Armando" />
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="p-cat">Kategori</label>
+            <select class="select" id="p-cat"><option>Website</option><option>UI/UX</option><option>Lainnya</option></select>
+          </div>
+          <div class="field">
+            <label for="p-year">Tahun</label>
+            <input class="input" id="p-year" type="number" inputmode="numeric" min="2015" max="2100" placeholder="2026" />
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="p-client">Klien <span class="opt">(opsional)</span></label>
+            <input class="input" id="p-client" maxlength="80" />
+          </div>
+          <div class="field">
+            <label for="p-order">Urutan <span class="opt">(kecil = atas)</span></label>
+            <input class="input" id="p-order" type="number" inputmode="numeric" value="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="p-summary">Ringkasan</label>
+          <textarea class="textarea" id="p-summary" maxlength="600" placeholder="Apa yang dikerjakan, untuk siapa, hasilnya seperti apa."></textarea>
+        </div>
+        <div class="field">
+          <label for="p-tech">Teknologi <span class="opt">(pisahkan dengan koma)</span></label>
+          <input class="input" id="p-tech" placeholder="React, Tailwind, Figma" />
+        </div>
+        <div class="field">
+          <label for="p-url">Link <span class="opt">(opsional)</span></label>
+          <input class="input" id="p-url" type="url" inputmode="url" placeholder="https://…" />
+        </div>
+        <div class="field">
+          <span class="label">Gambar <span class="opt">(JPG/PNG/WebP, otomatis dikompres)</span></span>
+          <div class="img-row">
+            <div class="thumb" data-thumb><Icon name="image" size={26} /></div>
+            <div class="img-actions">
+              <label class="btn btn--sm btn--light file-btn">Pilih gambar<input type="file" accept="image/jpeg,image/png,image/webp" data-file hidden /></label>
+              <button class="btn btn--sm btn--light" type="button" data-img-remove hidden>Hapus gambar</button>
+            </div>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="p-pub" checked /> Tampilkan di website</label>
+        <p class="error" data-pform-err hidden></p>
+        <div class="pform-foot">
+          <button class="btn btn--light" type="button" data-pdlg-close>Batal</button>
+          <button class="btn" type="submit" data-psave>Simpan</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="pdlg" data-mdlg aria-labelledby="mdlg-title">
+      <form class="pform" id="promo-form" method="dialog" novalidate>
+        <div class="pform-head">
+          <h2 id="mdlg-title" data-mdlg-title>Buat promo</h2>
+          <button class="round round--light" type="button" data-mdlg-close aria-label="Tutup"><Icon name="close" size={20} /></button>
+        </div>
+
+        <div class="field">
+          <label for="m-code">Kode promo <span class="req">*</span></label>
+          <div class="link-row">
+            <input class="input mono-up" id="m-code" maxlength="24" placeholder="HEMAT20" autocomplete="off" />
+            <button class="btn btn--sm btn--light" type="button" data-rand-code>Acak</button>
+          </div>
+          <span class="hint">Huruf besar, angka, dan tanda minus. 3 sampai 24 karakter.</span>
+        </div>
+        <div class="field">
+          <label for="m-title">Judul promo <span class="opt">(tampil ke pelanggan)</span></label>
+          <input class="input" id="m-title" maxlength="80" placeholder="Contoh: Promo akhir semester" />
+        </div>
+
+        <fieldset class="field fs">
+          <legend class="label">Jenis potongan</legend>
+          <div class="seg3">
+            <label><input type="radio" name="m-type" value="percent" checked /> <span>Persen</span></label>
+            <label><input type="radio" name="m-type" value="amount" /> <span>Nominal</span></label>
+            <label><input type="radio" name="m-type" value="fixed_price" /> <span>Harga spesial</span></label>
+          </div>
+        </fieldset>
+        <div class="row2">
+          <div class="field">
+            <label for="m-value" data-value-label>Diskon (%)</label>
+            <input class="input" id="m-value" type="number" inputmode="numeric" min="1" />
+          </div>
+          <div class="field" data-max-wrap>
+            <label for="m-max">Maks. potongan (Rp) <span class="opt">(opsional)</span></label>
+            <input class="input" id="m-max" type="number" inputmode="numeric" min="1" placeholder="25000" />
+          </div>
+        </div>
+
+        <fieldset class="field fs">
+          <legend class="label">Berlaku untuk layanan <span class="opt">(tidak dicentang semua = semua layanan)</span></legend>
+          <div class="svc-checks">
+            {SERVICES.map((s) => <label class="check"><input type="checkbox" name="m-svc" value={s.id} /> {s.short}</label>)}
+          </div>
+        </fieldset>
+
+        <div class="row2">
+          <div class="field">
+            <label for="m-start">Mulai <span class="opt">(opsional)</span></label>
+            <input class="input" id="m-start" type="datetime-local" />
+          </div>
+          <div class="field">
+            <label for="m-end">Berakhir <span class="opt">(opsional)</span></label>
+            <input class="input" id="m-end" type="datetime-local" />
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="m-personal" /> Khusus 1 orang (kode hanya bisa dipakai sekali)</label>
+        <div class="field" data-personal-wrap hidden>
+          <label for="m-personal-for">Untuk siapa?</label>
+          <input class="input" id="m-personal-for" maxlength="80" placeholder="Contoh: Budi (klien lama)" />
+        </div>
+        <div class="field" data-quota-wrap>
+          <label for="m-quota">Kuota pemakaian <span class="opt">(kosong = tanpa batas)</span></label>
+          <input class="input" id="m-quota" type="number" inputmode="numeric" min="1" placeholder="Contoh: 10" />
+        </div>
+
+        <div class="field">
+          <label for="m-note">Catatan <span class="opt">(hanya untukmu)</span></label>
+          <input class="input" id="m-note" maxlength="200" />
+        </div>
+        <label class="check"><input type="checkbox" id="m-active" checked /> Aktif</label>
+
+        <p class="preview" data-m-preview></p>
+        <p class="error" data-mform-err hidden></p>
+        <div class="pform-foot">
+          <button class="btn btn--light" type="button" data-mdlg-close>Batal</button>
+          <button class="btn" type="submit" data-msave>Simpan</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" role="status" aria-live="polite" data-toast></div>
+  </section>
+</Base>
+
+<style>
+  .admin { min-height: calc(100vh - var(--header-h)); padding-block: 1rem 3rem; }
+  [data-view][hidden] { display: none !important; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.9rem; }
+  .opt { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+  .center { display: grid; place-items: center; min-height: 50vh; }
+  .login-wrap { display: grid; place-items: center; min-height: 65vh; }
+  .login { width: min(100%, 420px); padding: 2rem; display: grid; gap: 1rem; box-shadow: var(--shadow); }
+  .login img { width: 84px; height: auto; }
+  .login h1 { font-size: 1.6rem; margin: 0; }
+  .login p { margin: 0; }
+  .status { margin: 0; min-height: 1.3em; color: var(--err); font-weight: 600; font-size: 0.92rem; }
+
+  .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .top h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin-bottom: 0.2rem; }
+  .top p { margin: 0; }
+  .top-actions { display: flex; gap: 0.5rem; }
+  .sm { min-height: 40px; padding: 0.45rem 0.95rem; font-size: 0.9rem; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat { padding: 1rem 1.2rem; display: grid; gap: 0.15rem; }
+  .stat span { font-size: 0.85rem; color: var(--muted); }
+  .stat strong { font-family: var(--font-head); font-size: 1.7rem; }
+
+  .grid { display: grid; grid-template-columns: 360px 1fr; gap: 1.25rem; align-items: start; }
+  .new { padding: 1.5rem; display: grid; gap: 1rem; position: sticky; top: calc(var(--header-h) + 1rem); }
+  .new h2 { font-size: 1.2rem; margin: 0; }
+  .new p { margin: -0.6rem 0 0; }
+  .result { display: grid; gap: 0.55rem; padding: 1rem; border-radius: var(--radius); background: var(--bg-warm); border: 1px solid #f6e2ad; }
+  .result[hidden] { display: none; }
+  .res-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .link-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; }
+  .mono { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; min-height: 40px; }
+
+  .panel { padding: 0.5rem; min-width: 0; }
+  .tabs { display: flex; gap: 0.25rem; padding: 0.25rem; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .tabs button {
+    border: 0; background: transparent; padding: 0.6rem 1rem; border-radius: 10px; font-weight: 650; cursor: pointer; color: var(--muted);
+    display: inline-flex; gap: 0.45rem; align-items: center; min-height: 42px;
+  }
+  .tabs button span { font-size: 0.78rem; padding: 0.05rem 0.5rem; border-radius: 99px; background: var(--bg-soft); }
+  .tabs button[aria-selected='true'] { background: var(--ink); color: #fff; }
+  .tabs button[aria-selected='true'] span { background: rgb(255 255 255 / 0.18); }
+  .tabpanel { padding: 0.75rem; }
+  .list { display: grid; gap: 0.75rem; }
+  .empty { text-align: center; padding: 2rem 1rem; margin: 0; }
+
+  :global(.item) { border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; display: grid; gap: 0.6rem; background: #fff; }
+  :global(.item.is-hidden) { background: #fbfaf8; border-style: dashed; }
+  :global(.item.is-hidden .i-txt) { color: var(--muted); }
+  :global(.i-head) { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  :global(.i-meta) { font-size: 0.85rem; color: var(--muted); display: flex; gap: 0.4rem 0.9rem; flex-wrap: wrap; align-items: center; }
+  :global(.i-meta strong) { color: var(--ink); }
+  :global(.i-txt) { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+  :global(.i-actions) { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  :global(.i-actions button), :global(.i-actions a) {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; min-height: 36px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;
+  }
+  :global(.i-actions button:hover), :global(.i-actions a:hover) { border-color: var(--ink); }
+  :global(.i-actions .danger) { color: var(--err); }
+  :global(.i-actions .danger:hover) { border-color: var(--err); }
+  :global(.badge) { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 99px; }
+  :global(.badge.ok) { background: #dff5ec; color: var(--ok); }
+  :global(.badge.wait) { background: var(--bg-warm); color: #8a6400; }
+  :global(.badge.off) { background: #eeeae4; color: var(--muted); }
+  :global(.code-txt) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 700; letter-spacing: 0.04em; }
+
+  .proj-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .proj-bar p { margin: 0; }
+  :global(.item .p-thumb) { width: 64px; height: 48px; border-radius: 10px; object-fit: cover; background: var(--panel-2); flex: none; }
+  :global(.item .p-row) { display: flex; gap: 0.9rem; align-items: center; }
+  :global(.item .p-row h3) { font-size: 1.05rem; margin: 0; }
+
+  .pdlg { border: 0; padding: 0; width: min(100% - 24px, 620px); max-height: calc(100dvh - 24px); border-radius: 28px; background: var(--panel); }
+  .pdlg::backdrop { background: rgb(21 21 21 / 0.55); }
+  .pform { padding: 1.5rem; display: grid; gap: 1rem; }
+  .pform-head { display: flex; justify-content: space-between; align-items: center; }
+  .pform-head h2 { margin: 0; font-size: 1.5rem; }
+  .pform .round--light { background: var(--panel-2); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .img-row { display: flex; gap: 1rem; align-items: center; }
+  .thumb { width: 120px; height: 80px; border-radius: 14px; background: var(--panel-2); display: grid; place-items: center; color: var(--muted); overflow: hidden; flex: none; }
+  .thumb :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .img-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .file-btn { cursor: pointer; border: 1.5px solid var(--line); }
+  .check { display: flex; gap: 0.6rem; align-items: center; font-weight: 600; }
+  .check input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .pform-foot { display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .hint { font-size: 0.82rem; color: var(--muted); }
+  .link-row .btn--light { border: 1.5px solid var(--line); }
+  .mono-up { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .fs legend { padding: 0; margin-bottom: 0.45rem; }
+  .seg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 16px; background: var(--panel-2); }
+  .seg3 label { position: relative; display: grid; place-items: center; min-height: 42px; border-radius: 12px; font-weight: 600; font-size: 0.92rem; cursor: pointer; text-align: center; }
+  .seg3 input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .seg3 label:has(input:checked) { background: var(--ink); color: #fff; }
+  .seg3 label:has(input:focus-visible) { outline: 3px solid var(--brand-deep); outline-offset: 2px; }
+  .svc-checks { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+  .svc-checks .check { font-weight: 500; }
+  [data-max-wrap][hidden], [data-personal-wrap][hidden], [data-quota-wrap][hidden] { display: none; }
+  .preview { margin: 0; padding: 0.8rem 1rem; border-radius: 14px; background: #fff3d1; font-size: 0.9rem; }
+  .preview:empty { display: none; }
+  :global(.promo-code) { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; }
+  :global(.uses) { display: grid; gap: 0.35rem; padding: 0.75rem; border-radius: 14px; background: var(--panel-2); font-size: 0.88rem; }
+  :global(.uses .u) { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  :global(.uses .u.cancel) { color: var(--muted); text-decoration: line-through; }
+  :global(.uses button) { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.2rem 0.65rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+  .fb-filter { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .fb-filter button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0.3rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; min-height: 34px; }
+  .fb-filter button[aria-pressed='true'] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(1.25rem + env(safe-area-inset-bottom)); translate: -50% 20px; opacity: 0; pointer-events: none;
+    background: var(--ink); color: #fff; padding: 0.7rem 1.1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;
+    box-shadow: var(--shadow-lg); transition: opacity 0.2s ease, translate 0.2s ease; max-width: calc(100% - 2rem); z-index: 60;
+  }
+  .toast.on { opacity: 1; translate: -50% 0; }
+  .toast.err { background: var(--err); }
+
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+    .new { position: static; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<script>
+  import { api, projects as projApi, promos as promoApi, uploadImage, getSession, login, logout, AuthError, type Code, type AdminReview, type AdminProject, type AdminPromo, type PromoUse } from '../lib/admin';
+  import { SITE, SERVICES } from '../config';
+  import { promoLabel } from '../lib/supabase';
+  import { feedback as fbApi, type Feedback } from '../lib/admin';
+
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+  const views = ['login', 'loading', 'denied', 'dash'] as const;
+  const show = (v: (typeof views)[number]) =>
+    views.forEach((x) => ($(`[data-view="${x}"]`) as HTMLElement).toggleAttribute('hidden', x !== v));
+
+  let toastTimer: number | undefined;
+  const toast = (msg: string, err = false) => {
+    const t = $<HTMLElement>('[data-toast]');
+    t.textContent = msg;
+    t.classList.toggle('err', err);
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => t.classList.remove('on'), 2600);
+  };
+
+  const reviewLink = (code: string) => `${SITE.url}/ulasan?kode=${encodeURIComponent(code)}`;
+  const waShare = (code: string, name?: string | null) =>
+    `https://wa.me/?text=${encodeURIComponent(
+      `Halo${name ? ' Kak ' + name : ''}, terima kasih sudah memakai layanan PAS!\n\nBoleh minta waktunya sebentar untuk memberi ulasan? Cukup buka link ini:\n${reviewLink(code)}\n\nKode ulasan: ${code}`,
+    )}`;
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); toast('Link disalin.'); }
+    catch { toast('Gagal menyalin. Salin manual dari kolom link.', true); }
+  };
+
+  const handle = (e: unknown) => {
+    if (e instanceof AuthError) { show('login'); $('[data-login-status]').textContent = e.message; return; }
+    console.error(e);
+    toast(e instanceof Error ? e.message : 'Terjadi kesalahan.', true);
+  };
+
+  // ---------- render ----------
+  let codes: Code[] = [];
+  let reviews: AdminReview[] = [];
+  let projs: AdminProject[] = [];
+  let promoList: AdminPromo[] = [];
+  let promoUses: PromoUse[] = [];
+  const openUses = new Set<string>();
+  let fbList: Feedback[] = [];
+  let fbFilter = '';
+
+  const el = (tag: string, cls?: string, text?: string) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  const btn = (label: string, onClick: () => void, cls = '') => {
+    const b = el('button', cls, label) as HTMLButtonElement;
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  };
+
+  function renderStats() {
+    const vis = reviews.filter((r) => r.is_visible);
+    const avg = vis.length ? vis.reduce((a, r) => a + r.rating, 0) / vis.length : 0;
+    $('[data-s-avg]').textContent = vis.length ? `${avg.toFixed(1).replace('.', ',')} ★` : '0';
+    $('[data-s-visible]').textContent = String(vis.length);
+    $('[data-s-hidden]').textContent = String(reviews.length - vis.length);
+    $('[data-s-open]').textContent = String(codes.filter((c) => !c.used_at).length);
+    $('[data-c-reviews]').textContent = String(reviews.length);
+    $('[data-c-codes]').textContent = String(codes.length);
+    $('[data-c-projects]').textContent = String(projs.length);
+    $('[data-c-promos]').textContent = String(promoList.length);
+    $('[data-c-feedback]').textContent = String(fbList.filter((f) => f.status === 'baru').length);
+  }
+
+  function renderReviews() {
+    const box = $<HTMLElement>('[data-reviews]');
+    box.innerHTML = '';
+    $('[data-reviews-empty]').toggleAttribute('hidden', reviews.length > 0);
+    for (const r of reviews) {
+      const it = el('article', `item${r.is_visible ? '' : ' is-hidden'}`);
+      const head = el('div', 'i-head');
+      const stars = el('span', '', '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating));
+      stars.style.color = 'var(--star)';
+      stars.style.letterSpacing = '2px';
+      stars.setAttribute('aria-label', `${r.rating} dari 5 bintang`);
+      head.append(stars, el('span', `badge ${r.is_visible ? 'ok' : 'off'}`, r.is_visible ? 'Tampil' : 'Disembunyikan'));
+      const meta = el('div', 'i-meta');
+      meta.append(el('strong', '', r.name), el('span', '', r.service), el('span', '', fmtDate(r.created_at)), el('span', 'code-txt', r.code));
+      const actions = el('div', 'i-actions');
+      actions.append(
+        btn(r.is_visible ? 'Sembunyikan' : 'Tampilkan', async () => {
+          try {
+            await api.setVisible(r.id, !r.is_visible);
+            r.is_visible = !r.is_visible;
+            renderReviews(); renderStats();
+            toast(r.is_visible ? 'Ulasan ditampilkan.' : 'Ulasan disembunyikan.');
+          } catch (e) { handle(e); }
+        }),
+        btn('Hapus', async () => {
+          if (!confirm(`Hapus ulasan dari ${r.name}? Tindakan ini tidak bisa dibatalkan.`)) return;
+          try {
+            await api.deleteReview(r.id);
+            reviews = reviews.filter((x) => x.id !== r.id);
+            renderReviews(); renderStats();
+            toast('Ulasan dihapus.');
+          } catch (e) { handle(e); }
+        }, 'danger'),
+      );
+      it.append(head, meta, el('p', 'i-txt', r.comment), actions);
+      box.append(it);
+    }
+  }
+
+  function renderCodes() {
+    const box = $<HTMLElement>('[data-codes]');
+    box.innerHTML = '';
+    $('[data-codes-empty]').toggleAttribute('hidden', codes.length > 0);
+    for (const c of codes) {
+      const it = el('article', 'item');
+      const head = el('div', 'i-head');
+      head.append(el('span', 'code-txt', c.code), el('span', `badge ${c.used_at ? 'ok' : 'wait'}`, c.used_at ? `Dipakai ${fmtDate(c.used_at)}` : 'Belum dipakai'));
+      const meta = el('div', 'i-meta');
+      meta.append(el('strong', '', c.client_name || 'Tanpa nama'), el('span', '', c.service || 'Tanpa layanan'), el('span', '', `Dibuat ${fmtDate(c.created_at)}`));
+      if (c.note) meta.append(el('span', '', c.note));
+      const actions = el('div', 'i-actions');
+      if (!c.used_at) {
+        const wa = el('a', '', 'WhatsApp') as HTMLAnchorElement;
+        wa.href = waShare(c.code, c.client_name);
+        wa.target = '_blank';
+        wa.rel = 'noopener';
+        actions.append(
+          btn('Salin link', () => copy(reviewLink(c.code))),
+          wa,
+          btn('Hapus', async () => {
+            if (!confirm(`Hapus kode ${c.code}?`)) return;
+            try {
+              await api.deleteCode(c.code);
+              codes = codes.filter((x) => x.code !== c.code);
+              renderCodes(); renderStats();
+              toast('Kode dihapus.');
+            } catch (e) { handle(e); }
+          }, 'danger'),
+        );
+      }
+      it.append(head, meta);
+      if (actions.childElementCount) it.append(actions);
+      box.append(it);
+    }
+  }
+
+  function renderProjects() {
+    const box = $<HTMLElement>('[data-projects]');
+    box.innerHTML = '';
+    $('[data-projects-empty]').toggleAttribute('hidden', projs.length > 0);
+    for (const p of projs) {
+      const it = el('article', `item${p.is_published ? '' : ' is-hidden'}`);
+      const row = el('div', 'p-row');
+      if (p.image_url) {
+        const img = document.createElement('img');
+        img.className = 'p-thumb'; img.src = p.image_url; img.alt = ''; img.loading = 'lazy';
+        row.append(img);
+      }
+      const t = el('div');
+      t.append(el('h3', '', p.title));
+      const meta = el('div', 'i-meta');
+      meta.append(el('span', 'tag', p.category));
+      if (p.year) meta.append(el('span', '', String(p.year)));
+      if (p.client) meta.append(el('span', '', p.client));
+      meta.append(el('span', '', `urutan ${p.sort_order}`));
+      t.append(meta);
+      row.append(t);
+      const head = el('div', 'i-head');
+      head.append(row, el('span', `badge ${p.is_published ? 'ok' : 'off'}`, p.is_published ? 'Tampil' : 'Disembunyikan'));
+      const actions = el('div', 'i-actions');
+      actions.append(
+        btn('Edit', () => openProject(p)),
+        btn(p.is_published ? 'Sembunyikan' : 'Tampilkan', async () => {
+          try {
+            await projApi.update(p.id, { is_published: !p.is_published });
+            p.is_published = !p.is_published;
+            renderProjects();
+            toast(p.is_published ? 'Karya ditampilkan.' : 'Karya disembunyikan.');
+          } catch (e) { handle(e); }
+        }),
+        btn('Hapus', async () => {
+          if (!confirm(`Hapus karya "${p.title}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+          try {
+            await projApi.remove(p.id);
+            projs = projs.filter((x) => x.id !== p.id);
+            renderProjects(); renderStats();
+            toast('Karya dihapus.');
+          } catch (e) { handle(e); }
+        }, 'danger'),
+      );
+      it.append(head);
+      if (p.summary) it.append(el('p', 'i-txt', p.summary));
+      it.append(actions);
+      box.append(it);
+    }
+  }
+
+  // ---------- dialog karya ----------
+  const dlg = $<HTMLDialogElement>('[data-pdlg]');
+  const pf = $<HTMLFormElement>('#project-form');
+  const f = {
+    title: $<HTMLInputElement>('#p-title'), cat: $<HTMLSelectElement>('#p-cat'), year: $<HTMLInputElement>('#p-year'),
+    client: $<HTMLInputElement>('#p-client'), order: $<HTMLInputElement>('#p-order'), summary: $<HTMLTextAreaElement>('#p-summary'),
+    tech: $<HTMLInputElement>('#p-tech'), url: $<HTMLInputElement>('#p-url'), pub: $<HTMLInputElement>('#p-pub'),
+    file: $<HTMLInputElement>('[data-file]'),
+  };
+  const thumb = $<HTMLElement>('[data-thumb]');
+  const thumbEmpty = thumb.innerHTML;
+  const imgRemove = $<HTMLButtonElement>('[data-img-remove]');
+  const perr = $<HTMLElement>('[data-pform-err]');
+  let editing: AdminProject | null = null;
+  let imageUrl: string | null = null;
+  let pendingFile: File | null = null;
+
+  const setThumb = (src: string | null) => {
+    thumb.innerHTML = '';
+    if (src) { const i = document.createElement('img'); i.src = src; i.alt = ''; thumb.append(i); } else thumb.innerHTML = thumbEmpty;
+    imgRemove.hidden = !src;
+  };
+
+  function openProject(p: AdminProject | null) {
+    editing = p;
+    pendingFile = null;
+    perr.hidden = true;
+    $('[data-pdlg-title]').textContent = p ? 'Edit karya' : 'Tambah karya';
+    f.title.value = p?.title ?? '';
+    f.cat.value = p?.category ?? 'Website';
+    f.year.value = p?.year ? String(p.year) : String(new Date().getFullYear());
+    f.client.value = p?.client ?? '';
+    f.order.value = String(p?.sort_order ?? 0);
+    f.summary.value = p?.summary ?? '';
+    f.tech.value = (p?.tech ?? []).join(', ');
+    f.url.value = p?.url ?? '';
+    f.pub.checked = p?.is_published ?? true;
+    f.file.value = '';
+    imageUrl = p?.image_url ?? null;
+    setThumb(imageUrl);
+    dlg.showModal();
+    f.title.focus();
+  }
+
+  $('[data-add-project]').addEventListener('click', () => openProject(null));
+  document.querySelectorAll('[data-pdlg-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+  f.file.addEventListener('change', () => {
+    const file = f.file.files?.[0];
+    if (!file) return;
+    pendingFile = file;
+    setThumb(URL.createObjectURL(file));
+  });
+  imgRemove.addEventListener('click', () => { pendingFile = null; imageUrl = null; f.file.value = ''; setThumb(null); });
+
+  pf.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    perr.hidden = true;
+    const title = f.title.value.trim();
+    const url = f.url.value.trim();
+    const year = f.year.value ? Number(f.year.value) : null;
+    const problem =
+      title.length < 2 ? 'Judul minimal 2 karakter.' :
+      url && !/^https?:\/\//i.test(url) ? 'Link harus diawali https://' :
+      year !== null && (year < 2015 || year > 2100) ? 'Tahun tidak valid.' : '';
+    if (problem) { perr.textContent = problem; perr.hidden = false; return; }
+    const save = $<HTMLButtonElement>('[data-psave]');
+    save.disabled = true; save.textContent = pendingFile ? 'Mengunggah…' : 'Menyimpan…';
+    try {
+      if (pendingFile) imageUrl = await uploadImage(pendingFile);
+      const data = {
+        title, category: f.cat.value as AdminProject['category'], year,
+        client: f.client.value.trim() || null, sort_order: Number(f.order.value) || 0,
+        summary: f.summary.value.trim() || null,
+        tech: f.tech.value.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 12),
+        url: url || null, image_url: imageUrl, is_published: f.pub.checked,
+      };
+      if (editing) await projApi.update(editing.id, data); else await projApi.create(data);
+      projs = await projApi.list();
+      renderProjects(); renderStats();
+      dlg.close();
+      toast(editing ? 'Karya diperbarui.' : 'Karya ditambahkan.');
+    } catch (err) {
+      if (err instanceof AuthError) { dlg.close(); handle(err); return; }
+      perr.textContent = err instanceof Error ? err.message : 'Gagal menyimpan.';
+      perr.hidden = false;
+    } finally {
+      save.disabled = false; save.textContent = 'Simpan';
+    }
+  });
+
+  // ---------- promo ----------
+  const svcShort = (id: string) => SERVICES.find((s) => s.id === id)?.short ?? id;
+  const fmtDT = (iso: string) => new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const usedCount = (code: string) => promoUses.filter((u) => u.code === code && u.status === 'used').length;
+  function promoState(p: AdminPromo): [string, string] {
+    const now = Date.now();
+    if (!p.is_active) return ['Nonaktif', 'off'];
+    if (p.starts_at && now < Date.parse(p.starts_at)) return ['Terjadwal', 'wait'];
+    if (p.ends_at && now > Date.parse(p.ends_at)) return ['Berakhir', 'off'];
+    if (p.quota !== null && usedCount(p.code) >= p.quota) return [p.personal_for ? 'Sudah dipakai' : 'Kuota habis', 'off'];
+    return ['Aktif', 'ok'];
+  }
+
+  function renderPromos() {
+    const box = $<HTMLElement>('[data-promos]');
+    box.innerHTML = '';
+    $('[data-promos-empty]').toggleAttribute('hidden', promoList.length > 0);
+    for (const p of promoList) {
+      const [label, cls] = promoState(p);
+      const it = el('article', `item${cls === 'off' ? ' is-hidden' : ''}`);
+      const head = el('div', 'i-head');
+      const left = el('div');
+      left.append(el('div', 'promo-code', p.code));
+      left.append(el('div', '', `${promoLabel(p)}${p.title ? ' · ' + p.title : ''}`));
+      head.append(left, el('span', `badge ${cls}`, label));
+      const meta = el('div', 'i-meta');
+      meta.append(el('span', '', p.services.length ? `Layanan: ${p.services.map(svcShort).join(', ')}` : 'Semua layanan'));
+      if (p.starts_at || p.ends_at) meta.append(el('span', '', `${p.starts_at ? fmtDT(p.starts_at) : '…'} → ${p.ends_at ? fmtDT(p.ends_at) : '…'}`));
+      meta.append(el('strong', '', `Dipakai ${usedCount(p.code)}${p.quota !== null ? ' / ' + p.quota : ''}`));
+      if (p.personal_for) meta.append(el('span', '', `Khusus: ${p.personal_for}`));
+      if (p.note) meta.append(el('span', '', p.note));
+      const actions = el('div', 'i-actions');
+      actions.append(
+        btn('Salin kode', async () => {
+          try { await navigator.clipboard.writeText(p.code); toast('Kode disalin.'); } catch { toast('Gagal menyalin.', true); }
+        }),
+        btn('Salin link', () => copy(`${SITE.url}/pesan?promo=${encodeURIComponent(p.code)}${p.services.length === 1 ? '&layanan=' + p.services[0] : ''}`)),
+        btn('Edit', () => openPromo(p)),
+        btn(p.is_active ? 'Nonaktifkan' : 'Aktifkan', async () => {
+          try {
+            await promoApi.update(p.code, { is_active: !p.is_active });
+            p.is_active = !p.is_active; renderPromos();
+            toast(p.is_active ? 'Promo diaktifkan.' : 'Promo dinonaktifkan.');
+          } catch (e) { handle(e); }
+        }),
+        btn(openUses.has(p.code) ? 'Tutup pemakaian' : 'Pemakaian', () => {
+          openUses.has(p.code) ? openUses.delete(p.code) : openUses.add(p.code); renderPromos();
+        }),
+        btn('Hapus', async () => {
+          if (!confirm(`Hapus promo ${p.code} beserta riwayat pemakaiannya?`)) return;
+          try {
+            await promoApi.remove(p.code);
+            promoList = promoList.filter((x) => x.code !== p.code);
+            promoUses = promoUses.filter((u) => u.code !== p.code);
+            renderPromos(); renderStats(); toast('Promo dihapus.');
+          } catch (e) { handle(e); }
+        }, 'danger'),
+      );
+      it.append(head, meta, actions);
+      if (openUses.has(p.code)) {
+        const list = el('div', 'uses');
+        const mine = promoUses.filter((u) => u.code === p.code);
+        if (!mine.length) list.append(el('span', 'muted', 'Belum ada yang memakai kode ini.'));
+        for (const u of mine) {
+          const row = el('div', `u${u.status === 'cancelled' ? ' cancel' : ''}`);
+          row.append(el('span', '', `${u.name || 'Tanpa nama'} · ${u.service ? svcShort(u.service) : 'Tanpa layanan'} · ${fmtDT(u.created_at)}`));
+          row.append(btn(u.status === 'used' ? 'Batalkan' : 'Pulihkan', async () => {
+            const next = u.status === 'used' ? 'cancelled' : 'used';
+            try { await promoApi.setUse(u.id, next); u.status = next; renderPromos(); toast(next === 'cancelled' ? 'Pemakaian dibatalkan, kuota kembali.' : 'Pemakaian dipulihkan.'); }
+            catch (e) { handle(e); }
+          }));
+          list.append(row);
+        }
+        it.append(list);
+      }
+      box.append(it);
+    }
+  }
+
+  const mdlg = $<HTMLDialogElement>('[data-mdlg]');
+  const mf = $<HTMLFormElement>('#promo-form');
+  const m = {
+    code: $<HTMLInputElement>('#m-code'), title: $<HTMLInputElement>('#m-title'), value: $<HTMLInputElement>('#m-value'),
+    max: $<HTMLInputElement>('#m-max'), start: $<HTMLInputElement>('#m-start'), end: $<HTMLInputElement>('#m-end'),
+    personal: $<HTMLInputElement>('#m-personal'), personalFor: $<HTMLInputElement>('#m-personal-for'),
+    quota: $<HTMLInputElement>('#m-quota'), note: $<HTMLInputElement>('#m-note'), active: $<HTMLInputElement>('#m-active'),
+  };
+  const merr = $<HTMLElement>('[data-mform-err]');
+  let editingPromo: AdminPromo | null = null;
+  const mType = () => (mf.querySelector<HTMLInputElement>('input[name="m-type"]:checked')!.value as AdminPromo['discount_type']);
+  const toLocal = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
+  const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
+
+  function syncPromoForm() {
+    const t = mType();
+    $('[data-value-label]').textContent = t === 'percent' ? 'Diskon (%)' : t === 'amount' ? 'Potongan (Rp)' : 'Harga spesial (Rp)';
+    m.value.max = t === 'percent' ? '100' : '';
+    m.value.placeholder = t === 'percent' ? '20' : t === 'amount' ? '15000' : '80000';
+    $<HTMLElement>('[data-max-wrap]').hidden = t !== 'percent';
+    $<HTMLElement>('[data-personal-wrap]').hidden = !m.personal.checked;
+    $<HTMLElement>('[data-quota-wrap]').hidden = m.personal.checked;
+    const v = Number(m.value.value);
+    const prev = $<HTMLElement>('[data-m-preview]');
+    if (v > 0) {
+      const rule = { discount_type: t, value: v, max_discount: t === 'percent' && Number(m.max.value) > 0 ? Number(m.max.value) : null };
+      const svcs = [...mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]:checked')].map((x) => svcShort(x.value));
+      prev.textContent = `Pratinjau: ${promoLabel(rule)} · ${svcs.length ? svcs.join(', ') : 'semua layanan'}${m.personal.checked ? ' · khusus 1 orang' : m.quota.value ? ` · kuota ${m.quota.value}` : ''}`;
+    } else prev.textContent = '';
+  }
+  mf.addEventListener('input', syncPromoForm);
+  mf.addEventListener('change', syncPromoForm);
+
+  function openPromo(p: AdminPromo | null) {
+    editingPromo = p;
+    merr.hidden = true;
+    $('[data-mdlg-title]').textContent = p ? `Edit promo ${p.code}` : 'Buat promo';
+    m.code.value = p?.code ?? '';
+    m.title.value = p?.title ?? '';
+    mf.querySelector<HTMLInputElement>(`input[name="m-type"][value="${p?.discount_type ?? 'percent'}"]`)!.checked = true;
+    m.value.value = p ? String(p.value) : '';
+    m.max.value = p?.max_discount ? String(p.max_discount) : '';
+    mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]').forEach((c) => (c.checked = !!p?.services.includes(c.value)));
+    m.start.value = toLocal(p?.starts_at ?? null);
+    m.end.value = toLocal(p?.ends_at ?? null);
+    m.personal.checked = !!p?.personal_for;
+    m.personalFor.value = p?.personal_for ?? '';
+    m.quota.value = p?.quota && !p.personal_for ? String(p.quota) : '';
+    m.note.value = p?.note ?? '';
+    m.active.checked = p?.is_active ?? true;
+    syncPromoForm();
+    mdlg.showModal();
+    m.code.focus();
+  }
+  $('[data-add-promo]').addEventListener('click', () => openPromo(null));
+  document.querySelectorAll('[data-mdlg-close]').forEach((b) => b.addEventListener('click', () => mdlg.close()));
+  $('[data-rand-code]').addEventListener('click', () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    m.code.value = 'PAS' + Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => chars[b % chars.length]).join('');
+  });
+  m.code.addEventListener('input', () => { m.code.value = m.code.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); });
+
+  mf.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    merr.hidden = true;
+    const t = mType();
+    const code = m.code.value.trim();
+    const value = Number(m.value.value);
+    const max = Number(m.max.value) || null;
+    const quota = m.personal.checked ? 1 : Number(m.quota.value) || null;
+    const starts = fromLocal(m.start.value), ends = fromLocal(m.end.value);
+    const problem =
+      !/^[A-Z0-9-]{3,24}$/.test(code) ? 'Kode harus 3 sampai 24 karakter (huruf besar, angka, minus).' :
+      !(value > 0) ? 'Isi nilai potongan.' :
+      t === 'percent' && value > 100 ? 'Persen maksimal 100.' :
+      starts && ends && Date.parse(ends) <= Date.parse(starts) ? 'Tanggal berakhir harus setelah tanggal mulai.' :
+      m.personal.checked && !m.personalFor.value.trim() ? 'Isi untuk siapa kode personal ini.' :
+      !editingPromo && promoList.some((x) => x.code === code) ? 'Kode ini sudah dipakai promo lain.' : '';
+    if (problem) { merr.textContent = problem; merr.hidden = false; return; }
+    const data = {
+      code, title: m.title.value.trim() || null, discount_type: t, value: Math.round(value),
+      max_discount: t === 'percent' ? max : null,
+      services: [...mf.querySelectorAll<HTMLInputElement>('input[name="m-svc"]:checked')].map((x) => x.value),
+      starts_at: starts, ends_at: ends, quota,
+      personal_for: m.personal.checked ? m.personalFor.value.trim() : null,
+      note: m.note.value.trim() || null, is_active: m.active.checked,
+    };
+    const save = $<HTMLButtonElement>('[data-msave]');
+    save.disabled = true; save.textContent = 'Menyimpan…';
+    try {
+      if (editingPromo) await promoApi.update(editingPromo.code, data); else await promoApi.create(data);
+      [promoList, promoUses] = await Promise.all([promoApi.list(), promoApi.uses()]);
+      renderPromos(); renderStats();
+      mdlg.close();
+      toast(editingPromo ? 'Promo diperbarui.' : `Promo ${code} dibuat.`);
+    } catch (err) {
+      if (err instanceof AuthError) { mdlg.close(); handle(err); return; }
+      const msg = err instanceof Error ? err.message : '';
+      merr.textContent = /duplicate|unique/i.test(msg) ? 'Kode ini sudah dipakai promo lain.' : msg || 'Gagal menyimpan.';
+      merr.hidden = false;
+    } finally { save.disabled = false; save.textContent = 'Simpan'; }
+  });
+
+  // ---------- saran ----------
+  const easeTxt = ['Sulit', 'Agak sulit', 'Biasa', 'Mudah', 'Sangat mudah'];
+  function renderFeedback() {
+    const box = $<HTMLElement>('[data-feedback]');
+    box.innerHTML = '';
+    const list = fbFilter ? fbList.filter((f) => f.status === fbFilter) : fbList;
+    $('[data-feedback-empty]').toggleAttribute('hidden', list.length > 0);
+    for (const f of list) {
+      const it = el('article', `item${f.status === 'selesai' ? ' is-hidden' : ''}`);
+      const head = el('div', 'i-head');
+      const left = el('div', 'i-meta');
+      left.append(el('span', 'tag', f.category));
+      if (f.ease) left.append(el('span', '', `Kemudahan ${f.ease}/5 (${easeTxt[f.ease - 1]})`));
+      left.append(el('span', '', fmtDate(f.created_at)));
+      if (f.page) left.append(el('span', '', `dari ${f.page}`));
+      head.append(left, el('span', `badge ${f.status === 'baru' ? 'wait' : f.status === 'dibaca' ? 'ok' : 'off'}`, f.status === 'baru' ? 'Baru' : f.status === 'dibaca' ? 'Dibaca' : 'Selesai'));
+      const who = el('div', 'i-meta');
+      who.append(el('strong', '', f.name || 'Anonim'));
+      if (f.contact) who.append(el('span', '', f.contact));
+      const actions = el('div', 'i-actions');
+      const set = (st: Feedback['status'], label: string) =>
+        btn(label, async () => {
+          try { await fbApi.setStatus(f.id, st); f.status = st; renderFeedback(); renderStats(); } catch (e) { handle(e); }
+        });
+      if (f.status !== 'dibaca') actions.append(set('dibaca', 'Tandai dibaca'));
+      if (f.status !== 'selesai') actions.append(set('selesai', 'Selesai ditindaklanjuti'));
+      if (f.status !== 'baru') actions.append(set('baru', 'Tandai baru'));
+      actions.append(btn('Hapus', async () => {
+        if (!confirm('Hapus saran ini?')) return;
+        try { await fbApi.remove(f.id); fbList = fbList.filter((x) => x.id !== f.id); renderFeedback(); renderStats(); toast('Saran dihapus.'); }
+        catch (e) { handle(e); }
+      }, 'danger'));
+      it.append(head, el('p', 'i-txt', f.message), who, actions);
+      box.append(it);
+    }
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-fb-filter] button').forEach((b) =>
+    b.addEventListener('click', () => {
+      fbFilter = b.dataset.st || '';
+      document.querySelectorAll('[data-fb-filter] button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderFeedback();
+    }),
+  );
+
+  async function loadData() {
+    [codes, reviews, projs, promoList, promoUses, fbList] = await Promise.all([api.listCodes(), api.listReviews(), projApi.list(), promoApi.list(), promoApi.uses(), fbApi.list()]);
+    renderStats(); renderReviews(); renderCodes(); renderProjects(); renderPromos(); renderFeedback();
+  }
+
+  async function enter() {
+    const s = getSession();
+    if (!s) { show('login'); return; }
+    show('loading');
+    try {
+      const ok = await api.isAdmin();
+      if (!ok) { $('[data-denied-email]').textContent = s.email; show('denied'); return; }
+      $('[data-email]').textContent = getSession()?.email || s.email;
+      await loadData();
+      show('dash');
+    } catch (e) { handle(e); }
+  }
+
+  // ---------- events ----------
+  $<HTMLFormElement>('#login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $<HTMLInputElement>('#l-email').value.trim();
+    const pass = $<HTMLInputElement>('#l-pass').value;
+    const status = $('[data-login-status]');
+    const b = $<HTMLButtonElement>('[data-login-btn]');
+    if (!email || !pass) { status.textContent = 'Isi email dan password.'; return; }
+    status.textContent = '';
+    b.disabled = true; b.textContent = 'Memeriksa…';
+    try {
+      await login(email, pass);
+      $<HTMLInputElement>('#l-pass').value = '';
+      await enter();
+    } catch (err) {
+      status.textContent = err instanceof Error ? err.message : 'Gagal masuk.';
+    } finally {
+      b.disabled = false; b.textContent = 'Masuk';
+    }
+  });
+
+  document.querySelectorAll('[data-logout]').forEach((b) =>
+    b.addEventListener('click', async () => { await logout(); show('login'); }),
+  );
+  $('[data-refresh]').addEventListener('click', async () => {
+    try { await loadData(); toast('Data diperbarui.'); } catch (e) { handle(e); }
+  });
+
+  $<HTMLFormElement>('#new-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const b = $<HTMLButtonElement>('[data-new-btn]');
+    b.disabled = true; b.textContent = 'Membuat…';
+    try {
+      const client = $<HTMLInputElement>('#n-client').value;
+      const code = await api.newCode(client, $<HTMLSelectElement>('#n-service').value, $<HTMLInputElement>('#n-note').value);
+      $<HTMLInputElement>('[data-result-link]').value = reviewLink(code);
+      $<HTMLAnchorElement>('[data-wa-result]').href = waShare(code, client.trim() || null);
+      $('[data-result]').toggleAttribute('hidden', false);
+      $<HTMLInputElement>('#n-client').value = '';
+      $<HTMLInputElement>('#n-note').value = '';
+      codes = await api.listCodes();
+      renderCodes(); renderStats();
+      toast(`Kode ${code} dibuat.`);
+    } catch (err) { handle(err); }
+    finally { b.disabled = false; b.textContent = 'Buat kode'; }
+  });
+  $('[data-copy-result]').addEventListener('click', () => copy($<HTMLInputElement>('[data-result-link]').value));
+
+  // tabs (dengan navigasi panah kiri/kanan)
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+  const select = (t: HTMLButtonElement) => {
+    tabs.forEach((x) => {
+      const on = x === t;
+      x.setAttribute('aria-selected', String(on));
+      x.tabIndex = on ? 0 : -1;
+      $(`[data-panel="${x.dataset.tab}"]`).toggleAttribute('hidden', !on);
+    });
+    t.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]);
+      }
+    });
+  });
+
+  enter();
+</script>

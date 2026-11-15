@@ -1,0 +1,184 @@
+---
+import Icon from './Icon.astro';
+import { WA_GENERAL, NAV } from '../config';
+
+interface Props { minimal?: boolean }
+const { minimal = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+const topNav = NAV.filter((n) => n.href !== '/pesan');
+const mobileMain = ['/', '/layanan', '/pesan', '/karya'].map((h) => NAV.find((n) => n.href === h)!);
+const menuActive = !mobileMain.some((n) => isActive(n.href));
+---
+
+<header class="nav-wrap" data-header>
+  <div class="shell nav">
+    <a href="/" class="brand" aria-label="PAS Petra All Service, ke beranda">
+      <img src="/logo.svg" alt="" width="64" height="39" />
+      <span class="brand-text" aria-hidden="true"><strong>PAS</strong><span>Petra All Service</span></span>
+    </a>
+
+    {!minimal && (
+      <nav class="tabs" aria-label="Navigasi utama">
+        {topNav.map((n) => {
+          const on = isActive(n.href);
+          return (
+            <a href={n.href} aria-current={on ? 'page' : undefined} class:list={['tab', { on }]} title={n.label}>
+              {on && <span class="active-bg" aria-hidden="true"></span>}
+              <Icon name={n.icon} size={18} />
+              <span class="lbl">{n.label}</span>
+            </a>
+          );
+        })}
+      </nav>
+    )}
+
+    <div class="actions">
+      {minimal ? (
+        <a class="btn btn--light btn--sm" href="/">Ke beranda</a>
+      ) : (
+        <>
+          <a class:list={['btn btn--brand btn--sm cta', { on: isActive('/pesan') }]} href="/pesan" aria-current={isActive('/pesan') ? 'page' : undefined}>
+            Pesan <Icon name="upright" size={18} />
+          </a>
+          <a class="round wa" href={WA_GENERAL} target="_blank" rel="noopener" aria-label="Chat WhatsApp">
+            <Icon name="wa" size={22} />
+          </a>
+        </>
+      )}
+    </div>
+  </div>
+</header>
+
+{!minimal && (
+  <>
+    <nav class="bottom-bar" aria-label="Navigasi utama (seluler)">
+      {mobileMain.map((n) => {
+        const on = isActive(n.href);
+        return (
+          <a href={n.href} aria-current={on ? 'page' : undefined} class:list={['bb', { on, accent: n.href === '/pesan' }]}>
+            {on && <span class="bb-bg" aria-hidden="true"></span>}
+            <Icon name={n.icon} size={21} />
+            <span>{n.short}</span>
+          </a>
+        );
+      })}
+      <button type="button" class:list={['bb', { on: menuActive }]} data-menu-open aria-haspopup="dialog">
+        {menuActive && <span class="bb-bg" aria-hidden="true"></span>}
+        <Icon name="grid" size={21} />
+        <span>Menu</span>
+      </button>
+    </nav>
+
+    <dialog class="menu-sheet" data-menu aria-label="Semua halaman">
+      <div class="sheet-head">
+        <strong>Semua halaman</strong>
+        <button class="round round--light" type="button" data-menu-close aria-label="Tutup menu"><Icon name="close" size={20} /></button>
+      </div>
+      <ul class="sheet-list">
+        {NAV.map((n) => (
+          <li>
+            <a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>
+              <Icon name={n.icon} size={22} />
+              <span><b>{n.label}</b><em>{n.desc}</em></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a class="btn btn--wa btn--block" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" /> Chat WhatsApp</a>
+    </dialog>
+  </>
+)}
+
+<style>
+  .nav-wrap { position: sticky; top: 0; z-index: 50; padding-top: 10px; background: linear-gradient(var(--page) 72%, transparent); view-transition-name: site-nav; }
+  .nav {
+    height: 64px; display: flex; align-items: center; gap: 0.75rem;
+    background: rgb(255 255 255 / 0.85); backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-radius: 999px; padding: 0 8px 0 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 0.55rem; text-decoration: none; flex: none; }
+  .brand img { width: 50px; height: auto; }
+  .brand-text { display: grid; line-height: 1.1; }
+  .brand-text strong { font-family: var(--font-head); font-size: 1.08rem; font-weight: 800; }
+  .brand-text span { font-size: 0.74rem; color: var(--muted); }
+
+  /* Tab pill berikon (referensi gambar 3) */
+  .tabs { margin-inline: auto; display: flex; gap: 2px; padding: 4px; background: var(--panel-2); border-radius: 999px; }
+  .tab {
+    position: relative; display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.85rem; border-radius: 999px;
+    text-decoration: none; font-weight: 600; font-size: 0.9rem; color: var(--ink-2); white-space: nowrap; isolation: isolate;
+    transition: color 0.2s ease;
+  }
+  .tab > :global(svg) { flex: none; opacity: 0.75; }
+  .tab:hover { color: var(--ink); }
+  .tab:hover::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: rgb(255 255 255 / 0.7); z-index: -2; }
+  .tab.on { color: #fff; }
+  .tab.on > :global(svg) { opacity: 1; }
+  .active-bg { position: absolute; inset: 0; border-radius: 999px; background: var(--ink); z-index: -1; view-transition-name: nav-active; }
+
+  .actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .tabs + .actions { margin-left: 0; }
+  .cta.on { box-shadow: 0 0 0 3px var(--ink); }
+  .wa { width: 48px; height: 48px; background: var(--wa); }
+
+  @media (max-width: 1260px) {
+    .tab:not(.on) .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .tab:not(.on) { padding-inline: 0.7rem; }
+  }
+  @media (max-width: 1000px) { .brand-text { display: none; } }
+
+  .bottom-bar, .menu-sheet { display: none; }
+
+  @media (max-width: 860px) {
+    .tabs, .cta { display: none; }
+    .tabs + .actions { margin-left: auto; }
+    .brand-text { display: grid; }
+    .nav { padding-right: 6px; height: 60px; }
+    .bottom-bar {
+      position: fixed; z-index: 50; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom));
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 6px;
+      background: var(--ink); border-radius: 26px; box-shadow: var(--shadow-pop); view-transition-name: bottom-bar;
+    }
+    .bb {
+      position: relative; isolation: isolate; display: grid; justify-items: center; gap: 2px; padding: 0.5rem 0.2rem 0.45rem; border-radius: 20px;
+      color: #c9c6be; text-decoration: none; font-size: 0.7rem; font-weight: 600; min-height: 54px; border: 0; background: none; cursor: pointer; font-family: inherit;
+      transition: color 0.2s ease;
+    }
+    .bb.on { color: var(--ink); }
+    .bb-bg { position: absolute; inset: 0; border-radius: 20px; background: var(--brand); z-index: -1; view-transition-name: mnav-active; }
+    .bb.accent:not(.on) { color: var(--brand); }
+
+    .menu-sheet[open] {
+      display: grid; gap: 1rem; position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 86dvh;
+      border: 0; border-radius: 28px 28px 0 0; padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom)); background: var(--panel);
+      animation: sheet-up 0.32s cubic-bezier(.2,.8,.2,1);
+    }
+    .menu-sheet::backdrop { background: rgb(21 21 21 / 0.5); backdrop-filter: blur(3px); animation: fade 0.3s ease; }
+    .sheet-head { display: flex; justify-content: space-between; align-items: center; padding-inline: 0.25rem; }
+    .sheet-head strong { font-family: var(--font-head); font-size: 1.3rem; }
+    .sheet-head .round { background: var(--panel-2); }
+    .sheet-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; overflow-y: auto; }
+    .sheet-list a {
+      display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.85rem; border-radius: 20px; background: var(--panel-2);
+      text-decoration: none; min-height: 72px;
+    }
+    .sheet-list a > :global(svg) { flex: none; margin-top: 2px; }
+    .sheet-list span { display: grid; line-height: 1.25; }
+    .sheet-list b { font-size: 0.95rem; }
+    .sheet-list em { font-style: normal; font-size: 0.76rem; color: var(--muted); }
+    .sheet-list a[aria-current='page'] { background: var(--ink); color: #fff; }
+    .sheet-list a[aria-current='page'] em { color: #b9b6ad; }
+    @keyframes sheet-up { from { transform: translateY(100%); } }
+    @keyframes fade { from { opacity: 0; } }
+  }
+  @media (max-width: 380px) { .brand-text span { display: none; } }
+</style>
+
+<script>
+  const sheet = document.querySelector<HTMLDialogElement>('[data-menu]');
+  document.querySelector('[data-menu-open]')?.addEventListener('click', () => sheet?.showModal());
+  document.querySelector('[data-menu-close]')?.addEventListener('click', () => sheet?.close());
+  sheet?.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+  sheet?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => sheet.close()));
+</script>

@@ -1,0 +1,183 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+const cats = [
+  { v: 'Tampilan', d: 'Warna, tata letak, teks' },
+  { v: 'Kemudahan', d: 'Navigasi, cara pesan' },
+  { v: 'Layanan', d: 'Jenis layanan, kualitas' },
+  { v: 'Harga', d: 'Harga, promo' },
+  { v: 'Lainnya', d: 'Apa saja' },
+];
+const ease = ['Sulit', 'Agak sulit', 'Biasa', 'Mudah', 'Sangat mudah'];
+---
+
+<Base title="Saran" description="Kirim saran untuk membuat website dan layanan PAS lebih mudah dipakai.">
+  <PageHead
+    kicker="Saran"
+    title="Bantu PAS jadi lebih baik."
+    desc="Ada yang membingungkan, kurang, atau bisa dibuat lebih mudah? Ceritakan saja. Boleh tanpa nama."
+  />
+
+  <div class="layout">
+    <form class="panel form" id="fb-form" novalidate>
+      <fieldset class="field fs">
+        <legend class="label">Tentang apa? <span class="req" aria-hidden="true">*</span></legend>
+        <div class="cats">
+          {cats.map((c, i) => (
+            <label class="cat">
+              <input type="radio" name="category" value={c.v} checked={i === 0} />
+              <span><b>{c.v}</b><em>{c.d}</em></span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="field fs">
+        <legend class="label">Seberapa mudah memakai website ini? <span class="opt">(opsional)</span></legend>
+        <div class="scale">
+          {ease.map((e, i) => (
+            <label class="sc">
+              <input type="radio" name="ease" value={i + 1} />
+              <span><b>{i + 1}</b><em>{e}</em></span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="fb-msg">Saranmu <span class="req" aria-hidden="true">*</span></label>
+        <textarea class="textarea" id="fb-msg" maxlength="1000" required placeholder="Contoh: Tombol pesan di HP susah ditemukan."></textarea>
+        <div class="under"><p class="error" id="e-msg" hidden>Tulis minimal 5 karakter.</p><span class="counter" data-counter>0/1000</span></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="fb-name">Nama <span class="opt">(opsional)</span></label>
+          <input class="input" id="fb-name" maxlength="60" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="fb-contact">WA / email <span class="opt">(kalau ingin dibalas)</span></label>
+          <input class="input" id="fb-contact" maxlength="80" autocomplete="email" />
+        </div>
+      </div>
+
+      <button class="btn btn--block submit" type="submit" data-submit><Icon name="send" size={18} /> Kirim saran</button>
+      <p class="status" role="status" aria-live="polite" data-status></p>
+    </form>
+
+    <div class="panel done" data-done hidden tabindex="-1">
+      <span class="big" aria-hidden="true">Terima kasih!</span>
+      <p class="muted">Saranmu sudah diterima dan akan dibaca langsung oleh Petra.</p>
+      <div class="done-ctas">
+        <a class="btn" href="/">Ke beranda</a>
+        <button class="btn btn--light" type="button" data-again>Kirim saran lain</button>
+      </div>
+    </div>
+
+    <aside class="panel panel--soft side">
+      <h2>Saran seperti apa?</h2>
+      <ul class="checks">
+        <li><Icon name="check" size={18} /><span>Bagian yang membingungkan atau sulit ditemukan</span></li>
+        <li><Icon name="check" size={18} /><span>Layanan yang kamu harapkan ada</span></li>
+        <li><Icon name="check" size={18} /><span>Tampilan yang kurang nyaman di HP</span></li>
+        <li><Icon name="check" size={18} /><span>Ide apa pun supaya lebih praktis</span></li>
+      </ul>
+      <p class="muted small">Saran hanya bisa dibaca oleh admin PAS dan tidak ditampilkan di website.</p>
+    </aside>
+  </div>
+
+  <Pager />
+</Base>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+  .form, .done { grid-column: 1; grid-row: 1; }
+  .side { grid-column: 2; grid-row: 1; }
+  .form { display: grid; gap: 1.3rem; }
+  .fs { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .fs legend { padding: 0; margin-bottom: 0.55rem; }
+  .cats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
+  .cat, .sc { position: relative; cursor: pointer; }
+  .cat input, .sc input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .cat span { display: grid; gap: 0.15rem; padding: 0.8rem 0.85rem; border-radius: 18px; background: var(--panel-2); height: 100%; transition: background-color 0.18s ease, color 0.18s ease; }
+  .cat b { font-size: 0.95rem; }
+  .cat em { font-style: normal; font-size: 0.76rem; color: var(--muted); line-height: 1.3; }
+  .cat:has(input:checked) span { background: var(--ink); color: #fff; }
+  .cat:has(input:checked) em { color: #b9b6ad; }
+  .cat:has(input:focus-visible) span, .sc:has(input:focus-visible) span { outline: 3px solid var(--brand-deep); outline-offset: 2px; }
+  .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; padding: 4px; border-radius: 20px; background: var(--panel-2); }
+  .sc span { display: grid; justify-items: center; gap: 0.05rem; padding: 0.55rem 0.2rem; border-radius: 16px; transition: background-color 0.18s ease; }
+  .sc b { font-family: var(--font-head); font-size: 1.2rem; }
+  .sc em { font-style: normal; font-size: 0.72rem; color: var(--muted); text-align: center; }
+  .sc:has(input:checked) span { background: var(--brand); }
+  .sc:has(input:checked) em { color: var(--ink); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .under { display: flex; justify-content: space-between; gap: 1rem; }
+  .counter { margin-left: auto; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .submit { min-height: 54px; }
+  .status { margin: 0; min-height: 1.3em; font-size: 0.92rem; }
+  .status.bad { color: var(--err); font-weight: 600; }
+  .done { display: grid; gap: 0.6rem; justify-items: start; padding-block: 3rem; }
+  .done[hidden] { display: none; }
+  .big { font-family: var(--font-head); font-weight: 850; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1; }
+  .done-ctas { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .side h2 { font-size: 1.4rem; }
+  .small { font-size: 0.85rem; margin: 1rem 0 0; }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { grid-column: 1; grid-row: 2; }
+    .cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px) {
+    .cats { grid-template-columns: 1fr 1fr; }
+    .row2 { grid-template-columns: 1fr; }
+    .sc em { display: none; }
+  }
+</style>
+
+<script>
+  import { submitFeedback } from '../lib/supabase';
+  const form = document.getElementById('fb-form') as HTMLFormElement;
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+  const msg = $<HTMLTextAreaElement>('#fb-msg');
+  const counter = $<HTMLElement>('[data-counter]');
+  const status = $<HTMLElement>('[data-status]');
+  const done = $<HTMLElement>('[data-done]');
+  msg.addEventListener('input', () => {
+    counter.textContent = `${msg.value.length}/1000`;
+    if (msg.value.trim().length >= 5) { $('#e-msg').toggleAttribute('hidden', true); msg.removeAttribute('aria-invalid'); }
+  });
+  let fromPage = '';
+  try { const r = document.referrer ? new URL(document.referrer) : null; if (r && r.origin === location.origin) fromPage = r.pathname; } catch {}
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    status.textContent = ''; status.className = 'status';
+    if (msg.value.trim().length < 5) {
+      $('#e-msg').toggleAttribute('hidden', false); msg.setAttribute('aria-invalid', 'true'); msg.focus(); return;
+    }
+    const b = $<HTMLButtonElement>('[data-submit]');
+    b.disabled = true;
+    try {
+      const fd = new FormData(form);
+      const r = await submitFeedback({
+        category: String(fd.get('category') || 'Lainnya'),
+        ease: fd.get('ease') ? Number(fd.get('ease')) : null,
+        message: msg.value.trim(),
+        name: $<HTMLInputElement>('#fb-name').value.trim(),
+        contact: $<HTMLInputElement>('#fb-contact').value.trim(),
+        page: fromPage,
+      });
+      if (r.status === 'ok') {
+        form.hidden = true; done.hidden = false; done.focus();
+      } else { status.textContent = r.message; status.className = 'status bad'; }
+    } catch {
+      status.textContent = 'Gagal mengirim. Periksa koneksi internetmu, lalu coba lagi.'; status.className = 'status bad';
+    } finally { b.disabled = false; }
+  });
+  $('[data-again]').addEventListener('click', () => {
+    form.reset(); counter.textContent = '0/1000'; done.hidden = true; form.hidden = false; msg.focus();
+  });
+</script>

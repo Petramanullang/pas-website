@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+import { FAQ, FAQ_CATS, WA_GENERAL } from '../config';
+
+const slug = (c: string) => 'faq-' + c.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title="FAQ" description="Pertanyaan yang sering ditanyakan tentang pemesanan, harga, promo, kelas coding, dan ulasan di PAS.">
+  <PageHead
+    kicker="FAQ"
+    title="Ada yang ingin ditanyakan?"
+    desc="Jawaban singkat untuk pertanyaan yang paling sering muncul."
+    subnav={FAQ_CATS.map((c) => ({ href: `#${slug(c)}`, label: c, count: FAQ.filter((f) => f.cat === c).length }))}
+    subLabel="Kategori pertanyaan"
+  />
+
+  <div class="layout">
+    <div class="groups">
+      {FAQ_CATS.map((c) => (
+        <section id={slug(c)} class="panel group reveal" aria-labelledby={`${slug(c)}-t`}>
+          <h2 id={`${slug(c)}-t`}>{c}</h2>
+          {FAQ.filter((f) => f.cat === c).map((f) => (
+            <details>
+              <summary>{f.q}<span class="pm" aria-hidden="true"></span></summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </section>
+      ))}
+    </div>
+
+    <aside class="side">
+      <div class="panel panel--dark ask">
+        <p class="kicker">Belum terjawab?</p>
+        <h2>Tanya langsung, gratis.</h2>
+        <a class="btn btn--wa btn--block" href={WA_GENERAL} target="_blank" rel="noopener"><Icon name="wa" /> Chat WhatsApp</a>
+      </div>
+      <a class="panel tip" href="/saran">
+        <strong>Punya saran?</strong>
+        <span class="muted">Ceritakan apa yang bisa dibuat lebih mudah.</span>
+        <span class="go"><Icon name="arrow" size={18} /></span>
+      </a>
+    </aside>
+  </div>
+
+  <Pager />
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+</Base>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--gap); align-items: start; }
+  .groups { display: grid; gap: var(--gap); }
+  .group { scroll-margin-top: 100px; }
+  .group h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  details { border-top: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.05rem 0; font-weight: 650; font-size: 1.02rem; min-height: 56px; }
+  summary::-webkit-details-marker { display: none; }
+  .pm { position: relative; width: 30px; height: 30px; flex: none; border-radius: 50%; border: 1.5px solid var(--ink); transition: background-color 0.15s ease; }
+  .pm::before, .pm::after { content: ''; position: absolute; left: 50%; top: 50%; width: 11px; height: 2px; background: currentColor; translate: -50% -50%; transition: rotate 0.2s ease; }
+  .pm::after { rotate: 90deg; }
+  details[open] .pm { background: var(--ink); color: #fff; }
+  details[open] .pm::after { rotate: 0deg; }
+  details p { padding: 0 2.5rem 1.1rem 0; margin: 0; color: var(--muted); }
+  details[open] p { animation: open 0.3s ease; }
+  @keyframes open { from { opacity: 0; transform: translateY(-4px); } }
+
+  .side { display: grid; gap: var(--gap); position: sticky; top: calc(var(--nav-h) + 12px); }
+  .ask h2 { color: #fff; font-size: 1.6rem; }
+  .tip { display: grid; gap: 0.2rem; text-decoration: none; position: relative; padding-right: 4rem; }
+  .tip strong { font-family: var(--font-head); font-size: 1.25rem; }
+  .go { position: absolute; right: 1.4rem; top: 50%; translate: 0 -50%; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); transition: background-color 0.2s ease, color 0.2s ease; }
+  .tip:hover .go { background: var(--ink); color: #fff; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { position: static; }
+  }
+</style>

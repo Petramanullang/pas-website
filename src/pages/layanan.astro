@@ -1,0 +1,115 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import PageHead from '../components/PageHead.astro';
+import Pager from '../components/Pager.astro';
+import { SERVICES, PRICE_TABLE, LANGUAGES } from '../config';
+const sub = [...SERVICES.map((s) => ({ href: `#${s.id}`, label: s.short })), { href: '#harga', label: 'Tabel harga' }];
+---
+
+<Base title="Layanan & Harga" description="Daftar layanan PAS dan harganya: bantuan tugas, pembuatan website, desain UI/UX, kelas coding online & offline, dan kebutuhan lain.">
+  <PageHead
+    kicker="Layanan & harga"
+    title="Pilih yang kamu butuhkan."
+    desc="Semua harga adalah harga mulai. Harga final disepakati setelah diskusi, sesuai tingkat kesulitan dan deadline."
+    subnav={sub}
+    subLabel="Lompat ke layanan"
+  />
+
+  {SERVICES.map((s, i) => (
+    <article id={s.id} class={`panel svc reveal${s.id === 'kelas' ? ' panel--dark' : ''}`} aria-labelledby={`t-${s.id}`}>
+      <span class="idx">{String(i + 1).padStart(2, '0')}</span>
+      <div class="main">
+        <h2 id={`t-${s.id}`}>{s.title}</h2>
+        <p class="muted">{s.desc}</p>
+        {s.id === 'kelas' && (
+          <ul class="langs" aria-label="Materi">
+            {LANGUAGES.map((l) => <li>{l}</li>)}
+          </ul>
+        )}
+      </div>
+      <ul class="checks">
+        {s.points.map((p) => <li><Icon name="check" size={18} /><span>{p}</span></li>)}
+      </ul>
+      <div class="buy">
+        {s.id === 'kelas' ? (
+          <div class="modes">
+            <div><span>Online</span><strong>Rp50rb</strong><em>mulai / sesi</em></div>
+            <div class="alt"><span>Offline</span><strong>Rp80rb</strong><em>mulai / sesi</em></div>
+          </div>
+        ) : (
+          <div class="pr">
+            <strong>{s.price}</strong>
+            {s.priceNote && <span>{s.priceNote}</span>}
+          </div>
+        )}
+        <a class={`btn ${s.id === 'kelas' ? 'btn--brand' : ''}`} href={`/pesan?layanan=${s.id}`}>Pesan {s.short.toLowerCase()} <Icon name="arrow" size={18} /></a>
+      </div>
+    </article>
+  ))}
+
+  <section id="harga" class="panel reveal price-panel" aria-labelledby="harga-title">
+    <div class="panel-title">
+      <h2 id="harga-title">Tabel harga</h2>
+      <a class="btn btn--sm" href="/cara-pesan">Lihat cara pesan <Icon name="arrow" size={16} /></a>
+    </div>
+    <table class="table">
+      <thead><tr><th scope="col">Layanan</th><th scope="col">Harga</th></tr></thead>
+      <tbody>
+        {PRICE_TABLE.map((r) => <tr><td>{r.item}</td><td>{r.price}</td></tr>)}
+      </tbody>
+    </table>
+  </section>
+
+  <Pager />
+</Base>
+
+<style>
+
+  .svc { display: grid; grid-template-columns: 70px 1.3fr 1fr 0.9fr; gap: clamp(1rem, 2.5vw, 2rem); align-items: start; scroll-margin-top: 100px; }
+  .idx { font-family: var(--font-head); font-weight: 800; font-size: 2.4rem; line-height: 1; color: #c9c5bc; }
+  .panel--dark .idx { color: #4a4844; }
+  .main h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); margin-bottom: 0.4rem; }
+  .main p { margin: 0; }
+  .panel--dark h2 { color: #fff; }
+  .checks { padding-top: 0.4rem; }
+  .buy { display: grid; gap: 0.9rem; justify-items: stretch; }
+  .pr { display: grid; line-height: 1.25; }
+  .pr strong { font-family: var(--font-head); font-size: 1.45rem; font-weight: 800; }
+  .pr span { color: var(--muted); font-size: 0.88rem; }
+  .langs { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .langs li { padding: 0.3rem 0.75rem; border-radius: 999px; border: 1.5px solid #4a4844; font-size: 0.85rem; font-weight: 600; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .modes div { display: grid; padding: 0.8rem 0.9rem; border-radius: var(--r-inner); background: #232322; line-height: 1.2; }
+  .modes .alt { background: var(--brand); color: var(--ink); }
+  .modes span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+  .modes strong { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
+  .modes em { font-style: normal; font-size: 0.78rem; opacity: 0.75; }
+
+  .price-panel { scroll-margin-top: 100px; }
+  .table { width: 100%; border-collapse: collapse; font-size: 0.97rem; }
+  .table th { text-align: left; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 650; padding: 0 0 0.6rem; }
+  .table th:last-child, .table td:last-child { text-align: right; }
+  .table td { padding: 0.85rem 0; border-top: 1px solid var(--line); }
+  .table td:last-child { font-weight: 650; white-space: nowrap; padding-left: 1rem; }
+
+
+  @media (max-width: 1000px) {
+    .svc { grid-template-columns: 52px 1fr 1fr; }
+    .buy { grid-column: 2 / -1; grid-template-columns: 1fr auto; align-items: center; }
+    .duo { grid-template-columns: 1fr; }
+      }
+  @media (max-width: 560px) {
+    .table thead { display: none; }
+    .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+    .table tr { padding: 0.75rem 0; border-top: 1px solid var(--line); }
+    .table td { border: 0; padding: 0; text-align: left !important; }
+    .table td:last-child { padding: 0.15rem 0 0; white-space: normal; color: var(--ink-2); }
+    .panel-title { flex-wrap: wrap; }
+  }
+  @media (max-width: 640px) {
+    .svc { grid-template-columns: 1fr; }
+    .idx { font-size: 1.6rem; }
+    .buy { grid-column: auto; grid-template-columns: 1fr; }
+    }
+</style>

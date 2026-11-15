@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /ulasan
+Disallow: /admin
+
+Sitemap: https://petrajm.tech/sitemap-index.xml
